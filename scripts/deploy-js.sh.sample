@@ -1,0 +1,21 @@
+#!/bin/bash
+
+srcdir=$(dirname $(readlink -f $0))/..
+dstServer=
+dstdir=
+pathJs=target/scala-2.12
+
+for file in $(ls $srcdir/$pathJs/*.js); do
+    filename=$(basename $file)
+    #echo file: $filename
+    scp -p $srcdir/$pathJs/$filename dstServer:$dstdir/$pathJs/$filename
+done
+
+
+for file in index.html edit.html theme.css; do
+    filename=$(basename $file)
+    #echo file: $filename
+    scp -p $srcdir/$filename dstServer:$dstdir/$filename
+done
+
+#scp $srcdir/config.js dstServer:$dstdir/config.js
