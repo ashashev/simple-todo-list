@@ -12,4 +12,6 @@ bin/
 .idea/
 .ensime
 .ensime_cache/
-
+*.err
+*.log
+scripts/*.sh

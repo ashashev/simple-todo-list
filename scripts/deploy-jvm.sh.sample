@@ -1,0 +1,17 @@
+#!/bin/bash
+
+srcdir=$(dirname $(readlink -f $0))/../target/scala-2.12
+dstdir=
+dstServer=
+script=simple-todo-list-server.sh
+
+ssh $dstServer "$dstdir/$script stop"
+
+for file in $(ls $srcdir/simple-todo-list-server-assembly-*.jar); do
+    filename=$(basename $file)
+    #echo file: $filename
+    scp -p $srcdir/$filename $dstServer:$dstdir/$filename
+done
+
+ssh $dstServer "$dstdir/$script start"
+

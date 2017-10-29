@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+
+    <meta http-equiv="cache-control" content="no-cache, must-revalidate, post-check=0, pre-check=0" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <meta name=viewport content="width=device-width">
+    <link rel="stylesheet" type="text/css" href="theme.css">
+
+    <script type="text/javascript" src="config.js?t=time()"></script>
+    <script>
+        config.mode="view";
+
+        function goToEdit() {
+            window.location = 'edit.html';
+        }
+    </script>
+
+    <title>ToDo List</title>
+</head>
+<body>
+<div id="main">
+    <header id="header">
+        <div id="status-led" class="led"></div>
+        <div id="status-label">ToDo List:</div>
+    </header>
+    <div class="no-float"></div>
+    <hr/>
+    <div id="items" name="items"></div>
+    <hr/>
+    <div class="buttons">
+        <button type="button" class="round-button" onclick="goToEdit();">✎</button>
+    </div>
+</div>
+<!-- Include Scala.js compiled code -->
+<script type="text/javascript" src="./target/scala-2.12/simple-todo-list-ui-fastopt.js?t=time()"></script>
+</body>
+</html>
