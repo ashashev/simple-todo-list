@@ -57,7 +57,7 @@ object Control {
 }
 
 private class Viewer(config: Config) extends {
-  override val socket = new WebSocket(config.wsUrl)
+  override val socket = new WebSocket(config.url)
 } with Control with WsTransport {
   private var checkboxes = List.empty[Checkbox]
   private var items = List.empty[Item]
@@ -65,7 +65,7 @@ private class Viewer(config: Config) extends {
 
 
   override def onConnect(on: Boolean): Unit = {
-    println(config.wsUrl)
+    println(config.url)
     println(s"connect is $on")
     if (on) {
       requestAll()
@@ -138,7 +138,7 @@ private class Editor(config: Config) extends Control {
   private val btnUpdate = getElementById[html.Button]("btnUpdate")
 
   private abstract class Worker(val stateEl: Element) extends {
-    override val socket = new WebSocket(config.wsUrl)
+    override val socket = new WebSocket(config.url)
   } with WsTransport {
     private var canChangeState = true
 

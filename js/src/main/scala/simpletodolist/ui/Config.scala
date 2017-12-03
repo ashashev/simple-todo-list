@@ -2,7 +2,7 @@ package simpletodolist.ui
 
 object Config {
   def apply(data: Map[String, String]): Config = new Config(
-    data.getOrElse("wsUrl", "ws://localhost"),
+    data.getOrElse("url", "ws://localhost"),
     Mode(data.get("mode"))
   )
 }
@@ -24,5 +24,5 @@ object Mode {
 
 }
 
-case class Config(wsUrl: String, mode: Mode)
+case class Config(url: String, mode: Mode, id: String)
 

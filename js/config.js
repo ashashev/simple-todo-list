@@ -1,5 +1,5 @@
 var config = {
-    wsUrl: "ws://localhost:8080",
+    url: "ws://localhost:8080/",
     mode: ""
 };
 
