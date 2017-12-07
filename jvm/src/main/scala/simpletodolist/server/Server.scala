@@ -22,7 +22,15 @@ class Server extends Daemon {
 
   private lazy val storage = system.actorOf(Storage.props(initialItems), "Storage")
 
-  def newClient(): Flow[Message, Message, NotUsed] = {
+  private def extractListId(queryString: Option[String]): Option[String] = queryString match {
+    case Some(query) =>
+      val id = query.split("&").filter(_.startsWith("id=")).head.drop(3)
+      if (id.isEmpty) None
+      else Some(id)
+    case None => None
+  }
+
+  def newClient(id: String): Flow[Message, Message, NotUsed] = {
     val clientActor = system.actorOf(Client.props(storage))
 
     val incomingMessages: Sink[Message, NotUsed] =
@@ -42,10 +50,17 @@ class Server extends Daemon {
   }
 
   private lazy val requestHandler: HttpRequest => HttpResponse = {
-    case req@HttpRequest(GET, Uri.Path("/"), _, _, _) =>
-      req.header[UpgradeToWebSocket] match {
-        case Some(upgrade) => upgrade.handleMessages(newClient())
-        case None => HttpResponse(400, entity = "Not a valid websocket request!")
+    case req@HttpRequest(GET, url@Uri.Path("/"), _, _, _) =>
+      extractListId(url.rawQueryString) match {
+        case Some(id) =>
+          req.header[UpgradeToWebSocket] match {
+            case Some(upgrade) => upgrade.handleMessages(newClient(id))
+            case None =>
+              req.discardEntityBytes()
+              HttpResponse(400, entity = "Not a valid websocket request!")
+          }
+        case None => req.discardEntityBytes()
+          HttpResponse(400, entity = "Unknown id!")
       }
     case r: HttpRequest =>
       r.discardEntityBytes() // important to drain incoming HTTP Entity stream

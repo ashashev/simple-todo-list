@@ -1,9 +1,32 @@
 package simpletodolist.ui
 
+import simpletodolist.library._
+
 object Config {
+  import org.scalajs.dom.{document, Location}
+
+  private implicit class DataExtractor(data: Map[String, String]) {
+    private def getId(location: Location) = {
+      queryStringToMap(location.search).getOrElse("id", "")
+    }
+
+    def url: String =
+      data.getOrElse("url", "ws://localhost")
+
+    def mode: Mode =
+      Mode(data.get("mode"))
+
+    def id: String = {
+      val id = data.getOrElse("id", "")
+      if (id.nonEmpty) id
+      else getId(document.location)
+    }
+  }
+
   def apply(data: Map[String, String]): Config = new Config(
-    data.getOrElse("url", "ws://localhost"),
-    Mode(data.get("mode"))
+    data.url,
+    data.mode,
+    data.id
   )
 }
 

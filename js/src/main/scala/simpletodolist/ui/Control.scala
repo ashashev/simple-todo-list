@@ -47,11 +47,14 @@ object States {
 }
 
 object Control {
-  def apply(config: Config): Control = config.mode match {
-    case Mode.View => new Viewer(config)
-    case Mode.Edit => new Editor(config)
-    case _ => new Control {
-      override def init(): Unit = println("Unknown mode or mode isn't set!")
+  def apply(config: Config): Control = {
+    println(config)
+    config.mode match {
+      case Mode.View => new Viewer(config)
+      case Mode.Edit => new Editor(config)
+      case _ => new Control {
+        override def init(): Unit = println("Unknown mode or mode isn't set!")
+      }
     }
   }
 }
