@@ -4,9 +4,9 @@ object Command {
   def apply(raw: String): Command = {
     raw.split("\n").toList match {
       case "@GET@" :: _ => Get
-      case "@UPD@" :: data => Update(Item(data.head.trim))
+      case "@UPD@" :: data => Update(Item(data.head))
       case "@REP@" :: data => Replace(data.map(Item(_)))
-      case _ => Unknown(raw)
+      case _ => throw new Error("Can't parse command string - unknown command: " + raw)
     }
   }
 }
@@ -25,8 +25,4 @@ sealed case class Update(i: Item) extends Command {
 
 sealed case class Replace(is: List[Item]) extends Command {
   override def toRaw = "@REP@\n" + (is map (_.toRaw) mkString "\n")
-}
-
-sealed case class Unknown(data: String) extends Command {
-  override def toRaw: String = data
 }

@@ -144,6 +144,11 @@ private class Editor(config: Config) extends Control {
 
     setState(stateEl)(States.waiting)
 
+    private def isAbleChangeState = worker match {
+      case None => false
+      case Some(w) => (w == this) && canChangeState
+    }
+
     def connectAction(): Unit
     def finished(): Unit = ()
 
@@ -152,18 +157,18 @@ private class Editor(config: Config) extends Control {
 
     override def onConnect(on: Boolean): Unit = {
       if (on) connectAction()
-      else if (canChangeState) setState(stateEl)(States.error)
+      else if (isAbleChangeState) setState(stateEl)(States.error)
     }
 
     def onReceived(cmd: Command): Unit = cmd match {
-      case Replace(data) =>
-        if (canChangeState)
-          setState(stateEl)(States.connected)
+      case Replace(data) => if (isAbleChangeState) {
+        setState(stateEl)(States.connected)
         replaceAction(data)
         canChangeState = false
         socket.close()
         worker = None
         finished()
+      }
       case _ => ()
     }
   }

@@ -10,6 +10,15 @@ object Client {
 
 }
 
+/**
+  * It's a mediator between the storage and the network actor.
+  *
+  * The first message that it should get is the Client.Connected message. After that the client starts to mediate
+  * between the storage and the "outgoing" network actor. It just retransmits messages from the storage to the network
+  * actor and back.
+  *
+  * @param storage the storage actor
+  */
 class Client(storage: ActorRef) extends Actor {
 
   import Client._
@@ -34,8 +43,8 @@ class Client(storage: ActorRef) extends Actor {
     {
       case cmd@Replace(_) =>
         calcReceiver(sender()) ! cmd
-      case cmd@Get =>
-        calcReceiver(sender()) ! cmd
+      case Get =>
+        calcReceiver(sender()) ! Get
       case cmd@Update(_) =>
         calcReceiver(sender()) ! cmd
     }
