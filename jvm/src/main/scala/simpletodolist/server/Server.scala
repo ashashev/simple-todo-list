@@ -10,17 +10,15 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import simpletodolist.library._
 
-import scala.io.StdIn
-import org.apache.commons.daemon._
 
-class Server extends Daemon {
-  private implicit lazy val system = ActorSystem()
-  private implicit lazy val materializer = ActorMaterializer()
+class Server {
+  implicit lazy val system = ActorSystem()
+  implicit lazy val materializer = ActorMaterializer()
 
   private val initialItems = List.empty[Item]
 
 
-  private lazy val storage = system.actorOf(Storage.props(initialItems), "Storage")
+  lazy val storage = system.actorOf(Storage.props(initialItems), "Storage")
 
   def newClient(): Flow[Message, Message, NotUsed] = {
     val clientActor = system.actorOf(Client.props(storage))
@@ -54,53 +52,9 @@ class Server extends Daemon {
 
   val interface = sys.props.getOrElse("listening.interface", "localhost")
   val port = sys.props.getOrElse("listening.port", "8080").toInt
-  private lazy val bindingFuture =
+  lazy val bindingFuture =
     Http().bindAndHandleSync(requestHandler, interface = interface, port = port)
 
-  println(s"Server online at http://$interface:$port/")
-
-  def init(daemonContext: DaemonContext): Unit = {
-    init(daemonContext.getArguments)
-  }
-
-  def init(args: Array[String]): Unit = {
-    println("init")
-  }
-
-  def start(): Unit = {
-    println("start")
-    system
-    materializer
-    storage
-    bindingFuture
-  }
-
-  def stop(): Unit = {
-    println("stop")
-    import system.dispatcher // for the future transformations
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
-  }
-
-  def destroy(): Unit = {
-    println("destroy")
-  }
-}
-
-object Main {
-  private lazy val server = new Server
-
-  def main(args: Array[String]): Unit = {
-    server.init(Array.empty[String])
-    server.start()
-
-    println("\n>>>>>>>>>> Press RETURN to stop... <<<<<<<<<<\n")
-    StdIn.readLine() // let it run until user presses return
-
-    server.stop()
-    server.destroy()
-  }
 }
 
 
