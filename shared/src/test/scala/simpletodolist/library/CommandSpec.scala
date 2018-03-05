@@ -79,4 +79,9 @@ class CommandSpec extends FlatSpec {
         assert(e.getMessage.contains(input), "Error message contains input string")
     }
   }
+
+  "Item.makeList" should "create empty list from empty string" in {
+    val got = Item.makeList("")
+    assert(got === List.empty[Item])
+  }
 }

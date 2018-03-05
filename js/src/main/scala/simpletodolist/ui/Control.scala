@@ -179,7 +179,7 @@ private class Editor(config: Config) extends Control {
 
   private class Replacer extends Worker(document.getElementById("status-led")) {
     override def connectAction(): Unit =
-      send(Replace(todolist.value.split("\n").map(Item(_)).toList).toRaw)
+      send(Replace(Item.makeList(todolist.value)).toRaw)
 
     override def finished(): Unit = {
       document.location.replace("index.html")

@@ -11,6 +11,8 @@ object Item {
   def createId(): Id = UUID.randomUUID()
 
   def apply(raw: String): Item = {
+    assert(!raw.isEmpty() && (raw.trim() != "+"))
+
     val parts = raw.split(";").map(_.trim)
 
     assert(parts.size == 1 || parts.size == 3)
@@ -18,6 +20,14 @@ object Item {
     if (parts.size == 3) new Item(idFromString(parts(0)), parts(1) == "+", parts(2))
     else if (parts(0)(0) == '+') new Item(createId(), true, parts(0).drop(1).trim())
     else new Item(createId(), false, parts(0))
+  }
+
+  def makeList(raw: String): List[Item] = {
+    for {
+      r <- raw.split("\n").toList
+      s = r.trim()
+      if (!s.isEmpty() && s != "+")
+    } yield Item(s)
   }
 }
 
