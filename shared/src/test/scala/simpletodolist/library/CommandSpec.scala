@@ -84,4 +84,18 @@ class CommandSpec extends FlatSpec {
     val got = Item.makeList("")
     assert(got === List.empty[Item])
   }
+
+  it should "skip empty strings and strings equal '+'" in {
+    val got = Item.makeList(
+      """
+        |item1
+        |
+        |+
+        | +
+        |item2
+      """.stripMargin)
+    assert(got.size === 2)
+    assert(got(0).text === "item1")
+    assert(got(1).text === "item2")
+  }
 }
