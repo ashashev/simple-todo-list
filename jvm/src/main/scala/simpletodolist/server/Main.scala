@@ -1,11 +1,22 @@
 package simpletodolist.server
 
+import akka.actor.ActorSystem
 import org.apache.commons.daemon._
+import simpletodolist.library.Item
+
 import scala.io.StdIn
 
-class Main extends Server with Daemon {
+class Main extends Daemon {
 
-  println(s"Server online at http://$interface:$port/")
+
+  implicit val system = ActorSystem()
+
+  val storage = system.actorOf(Storage.props(List.empty[Item]))
+  val server = Server(
+    sys.props.getOrElse("listening.interface", "localhost"),
+    sys.props.getOrElse("listening.port", "8080").toInt,
+    storage
+  )
 
   def init(daemonContext: DaemonContext): Unit = {
     init(daemonContext.getArguments)
@@ -17,18 +28,13 @@ class Main extends Server with Daemon {
 
   def start(): Unit = {
     println("start")
-    system
-    materializer
-    storage
-    bindingFuture
+    server.start()
   }
 
   def stop(): Unit = {
     println("stop")
-    import system.dispatcher // for the future transformations
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+    server.stop()
+    system.terminate()
   }
 
   def destroy(): Unit = {

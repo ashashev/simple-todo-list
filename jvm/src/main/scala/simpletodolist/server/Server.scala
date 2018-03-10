@@ -1,26 +1,36 @@
 package simpletodolist.server
 
 import akka.NotUsed
-import akka.actor.{ActorSystem, PoisonPill}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.ws.{Message, TextMessage, UpgradeToWebSocket}
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import simpletodolist.library._
+import simpletodolist.library.Command
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
-class Server {
-  implicit lazy val system = ActorSystem()
-  implicit lazy val materializer = ActorMaterializer()
+object Server {
+  def apply(interface: String, port: Int, storage: ActorRef)(implicit system: ActorSystem): Server =
+    new Server(interface, port, storage, system)
+}
 
-  private val initialItems = List.empty[Item]
+/**
+  * WebSocket server.
+  *
+  * @param interface
+  * @param port
+  * @param storage
+  * @param system
+  */
+class Server(interface: String, port: Int, storage: ActorRef, implicit private val system: ActorSystem) {
+  import system.dispatcher
+  implicit private val materializer = ActorMaterializer()
 
-
-  lazy val storage = system.actorOf(Storage.props(initialItems), "Storage")
-
-  def newClient(): Flow[Message, Message, NotUsed] = {
+  private def newClient(): Flow[Message, Message, NotUsed] = {
     val clientActor = system.actorOf(Client.props(storage))
 
     val incomingMessages: Sink[Message, NotUsed] =
@@ -39,7 +49,7 @@ class Server {
     Flow.fromSinkAndSource(incomingMessages, outgoingMessages)
   }
 
-  private lazy val requestHandler: HttpRequest => HttpResponse = {
+  private val requestHandler: HttpRequest => HttpResponse = {
     case req@HttpRequest(GET, Uri.Path("/"), _, _, _) =>
       req.header[UpgradeToWebSocket] match {
         case Some(upgrade) => upgrade.handleMessages(newClient())
@@ -50,10 +60,26 @@ class Server {
       HttpResponse(404, entity = "Unknown resource!")
   }
 
-  val interface = sys.props.getOrElse("listening.interface", "localhost")
-  val port = sys.props.getOrElse("listening.port", "8080").toInt
-  lazy val bindingFuture =
-    Http().bindAndHandleSync(requestHandler, interface = interface, port = port)
+  private var binding: Option[Future[Http.ServerBinding]] = None
+
+  /**
+    * Binds socket.
+    */
+  def start(): Unit = binding match {
+    case None =>
+      val f = Http().bindAndHandleSync(requestHandler, interface = interface, port = port)
+      f.onComplete(_ => println(s"Server online at http://$interface:$port/"))
+      binding = Some(f)
+    case Some(_) => throw new Exception("Server is already started!")
+  }
+
+  /**
+    * Unbinds socket.
+    */
+  def stop(): Unit = binding.map { f =>
+    val end = f.flatMap(_.unbind())
+    Await.result(end, Duration.Inf)
+  }
 
 }
 
