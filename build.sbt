@@ -3,7 +3,6 @@ name := "simple-todo-list"
 scalaVersion in ThisBuild := "2.12.4"
 
 lazy val akkaHttpVersion = "10.0.11"
-lazy val akkaVersion = "2.4.20" //version akka for akka http
 lazy val scalaTestVersion = "3.0.1"
 
 lazy val root = project.in(file(".")).
@@ -28,7 +27,7 @@ lazy val work = crossProject.in(file(".")).
     coverageEnabled := true,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
       "commons-daemon" % "commons-daemon" % "1.0.15"
     )
   ).
