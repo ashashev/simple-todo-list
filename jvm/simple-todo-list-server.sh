@@ -10,7 +10,7 @@ SCRIPT=$(readlink -f "$0")
 WORKDIR=$(dirname "$SCRIPT")
 CLASS_PATH="$WORKDIR/simple-todo-list-server-assembly-0.1.jar"
 #CLASS_PATH="$WORKDIR/simple-todo-list-server.jar"
-CLASS=simpletodolist.server.Server
+CLASS=simpletodolist.server.Main
 USER=foo
 
 PID="$WORKDIR/simple-todo-list-server.pid"

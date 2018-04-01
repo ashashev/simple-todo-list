@@ -24,7 +24,7 @@ lazy val work = crossProject.in(file(".")).
   jvmSettings(
     // Add JVM-specific settings here
     name := "simple-todo-list-server",
-    coverageEnabled := true,
+    //coverageEnabled := true,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
