@@ -15,7 +15,8 @@ object Server {
 }
 
 /**
-  * WebSocket server.
+  * The server handles incoming http-connections.
+  * It regards a WebSocket connections as a command connections and routes ones to the storage.
   *
   * @param storage
   * @param system
