@@ -15,7 +15,7 @@ trait Control {
   }
 
   protected def setState(el: Element)(state: States.State): Unit = {
-    if (el != null ) {
+    if (el != null) {
       States.allStates foreach { s =>
         if (s == state) {
           if (!el.classList.contains(s.cssClass))
@@ -30,16 +30,19 @@ trait Control {
 }
 
 object States {
+
   trait State {
     def cssClass: String
   }
 
   private val registred = collection.mutable.Set.empty[State]
+
   private case class SomeState(cssClass: String) extends State {
     registred += this
   }
 
   def allStates: Set[State] = registred.toSet
+
   val error: State = SomeState("led-red")
   val waiting: State = SomeState("led-yellow")
   val connected: State = SomeState("led-green")
@@ -56,17 +59,15 @@ object Control {
   }
 }
 
-private class Viewer(config: Config) extends {
-  override val socket = new WebSocket(config.wsUrl)
-} with Control with WsTransport {
+private class Viewer(config: Config) extends Control with WsTransport.Observer {
   private var checkboxes = List.empty[Checkbox]
   private var items = List.empty[Item]
   private val itemsArea = getElementById[html.Div]("items")
+  private val ws = WsTransport(config.wsUrl, this)
 
 
   override def onConnect(on: Boolean): Unit = {
-    println(config.wsUrl)
-    println(s"connect is $on")
+    println(s"connection to ${config.wsUrl} is $on")
     if (on) {
       requestAll()
     } else {
@@ -76,7 +77,8 @@ private class Viewer(config: Config) extends {
     }
   }
 
-  def onReceived(cmd: Command): Unit = {
+  override def onReceive(cmd: Command): Unit = {
+    println(s"receive")
     setState(States.connected)
     cmd match {
       case Replace(data) =>
@@ -95,7 +97,7 @@ private class Viewer(config: Config) extends {
 
   def requestAll() = {
     setState(States.waiting)
-    send(Get.toRaw)
+    ws.send(Get.toRaw)
   }
 
   def onChanged(checkbox: Checkbox): Unit = {
@@ -103,7 +105,7 @@ private class Viewer(config: Config) extends {
     val ind = items.indexWhere(id == _.id)
     val newItem = items(ind).copy(checked = checkbox.checked)
     items = items.updated(ind, newItem)
-    send(Update(newItem).toRaw)
+    ws.send(Update(newItem).toRaw)
   }
 
   private def recreateItems(): Unit = {
@@ -124,9 +126,21 @@ private class Viewer(config: Config) extends {
     }
   }
 
+  def onFocus(focusEvent: FocusEvent): Unit = {
+    println("onFocus")
+    if (!ws.connected)
+      ws.connect(config.wsUrl)
+  }
+
+  def onBlur(focusEvent: FocusEvent): Unit = {
+    println("onBlur")
+  }
+
   override def init(): Unit = {
     println("Viewer")
     setState(States.error)
+    window.onfocus = onFocus
+    window.onblur = onBlur
     ()
   }
 }
@@ -137,10 +151,9 @@ private class Editor(config: Config) extends Control {
   private val btnReload = getElementById[html.Button]("btnReload")
   private val btnUpdate = getElementById[html.Button]("btnUpdate")
 
-  private abstract class Worker(val stateEl: Element) extends {
-    override val socket = new WebSocket(config.wsUrl)
-  } with WsTransport {
+  private abstract class Worker(val stateEl: Element) extends WsTransport.Observer {
     private var canChangeState = true
+    private val ws = WsTransport(config.wsUrl, this)
 
     setState(stateEl)(States.waiting)
 
@@ -150,6 +163,7 @@ private class Editor(config: Config) extends Control {
     }
 
     def connectAction(): Unit
+
     def finished(): Unit = ()
 
     def replaceAction(data: List[Item]): Unit =
@@ -160,17 +174,20 @@ private class Editor(config: Config) extends Control {
       else if (isAbleChangeState) setState(stateEl)(States.error)
     }
 
-    def onReceived(cmd: Command): Unit = cmd match {
+    override def onReceive(cmd: Command): Unit = cmd match {
       case Replace(data) => if (isAbleChangeState) {
         setState(stateEl)(States.connected)
         replaceAction(data)
         canChangeState = false
-        socket.close()
+        ws.removeObserver(this)
+        ws.close()
         worker = None
         finished()
       }
       case _ => ()
     }
+
+    def send = ws.send(_)
   }
 
   private class Getter extends Worker(document.getElementById("status-led")) {
