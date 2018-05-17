@@ -37,7 +37,7 @@ lazy val work = crossProject.in(file(".")).
     scalaJSUseMainModuleInitializer := true,
 
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+      "org.scala-js" %%% "scalajs-dom" % "0.9.5"
     )
   )
 
