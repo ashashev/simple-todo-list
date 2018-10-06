@@ -29,8 +29,9 @@ class Server(storage: ActorRef, implicit private val system: ActorSystem) {
     val clientActor = system.actorOf(Client.props(storage))
 
     val incomingMessages: Sink[Message, NotUsed] =
-      Flow[Message].map {
-        case TextMessage.Strict(text) => Command(text)
+      Flow[Message].flatMapConcat {
+        case TextMessage.Strict(text) => Source(Command(text) :: Nil)
+        case TextMessage.Streamed(in) => in.reduce(_ + _).map(Command(_))
       }.to(Sink.actorRef[Command](clientActor, PoisonPill))
 
     val outgoingMessages: Source[Message, NotUsed] =

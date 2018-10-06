@@ -38,7 +38,7 @@ class FullTestKitExampleSpec extends FlatSpecLike with Matchers with ScalatestRo
     }
   }
 
-  ignore should "routes commands from streamed WebSocket to the storage" in {
+  it should "routes commands from streamed WebSocket to the storage" in {
     val fakeStorage = TestProbe()
     val fakeClient = WSProbe()
     val server = Server(fakeStorage.ref)
