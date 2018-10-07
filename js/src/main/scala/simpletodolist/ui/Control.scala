@@ -3,6 +3,8 @@ package simpletodolist.ui
 import org.scalajs.dom._
 import simpletodolist.library._
 
+import scala.collection.immutable.Queue
+
 trait Control {
   def init()
 
@@ -61,6 +63,7 @@ object Control {
 
 private class Viewer(config: Config) extends Control with WsTransport.Observer {
   private var checkboxes = List.empty[Checkbox]
+  private var delayed = Queue.empty[Update]
   private var items = List.empty[Item]
   private val itemsArea = getElementById[html.Div]("items")
   private val ws = WsTransport(config.wsUrl, this)
@@ -72,8 +75,6 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
       requestAll()
     } else {
       setState(States.error)
-      items = List.empty[Item]
-      recreateItems()
     }
   }
 
@@ -84,6 +85,10 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
       case Replace(data) =>
         items = data
         recreateItems()
+        if (delayed.nonEmpty) {
+          for (c <- delayed if items.exists(_.id == c.i.id)) ws.send(c.toRaw)
+          delayed = Queue.empty
+        }
       case Update(newItem) =>
         val ind = items.indexWhere(newItem.id == _.id)
         if (ind == -1) requestAll()
@@ -105,7 +110,12 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
     val ind = items.indexWhere(id == _.id)
     val newItem = items(ind).copy(checked = checkbox.checked)
     items = items.updated(ind, newItem)
-    ws.send(Update(newItem).toRaw)
+    if (ws.connected)
+      ws.send(Update(newItem).toRaw)
+    else {
+      delayed = delayed.filterNot(_.i.id == newItem.id) :+ Update(newItem)
+      ws.connect(config.wsUrl)
+    }
   }
 
   private def recreateItems(): Unit = {
