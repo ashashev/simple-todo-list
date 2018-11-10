@@ -16,3 +16,4 @@ bin/
 *.log
 scripts/*.sh
 .DS_Store
+/*.sh
