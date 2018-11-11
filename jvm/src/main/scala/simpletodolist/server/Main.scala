@@ -1,16 +1,18 @@
 package simpletodolist.server
 
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.Duration
+import scala.io.StdIn
+import scala.util.{Failure, Success}
+
 import akka.actor.ActorSystem
-import org.apache.commons.daemon._
-import simpletodolist.library.Item
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success}
-import scala.concurrent.{Await, Future}
-import scala.io.StdIn
+import org.apache.commons.daemon._
+
+import simpletodolist.library.{Item, StorageId}
 
 class Main extends Daemon {
 
@@ -19,7 +21,7 @@ class Main extends Daemon {
   import system.dispatcher
 
 
-  val storage = system.actorOf(Storage.props(List.empty[Item]))
+  val storage = system.actorOf(Storage.props(List.empty[Item], StorageId.ZERO))
   val server = Server(storage)
 
   implicit val bind: Future[Http.ServerBinding] = Http().bindAndHandle(

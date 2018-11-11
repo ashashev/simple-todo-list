@@ -1,15 +1,16 @@
 package simpletodolist.server
 
 import akka.actor.{Actor, ActorRef, Props}
+
 import simpletodolist.library._
 
 object Storage {
-  def props(items: List[Item]) = Props(new Storage(items))
+  def props(items: List[Item], id: StorageId) = Props(new Storage(items, id))
   case object Join
   case object Disjoin
 }
 
-class Storage(var items: List[Item]) extends Actor {
+class Storage(var items: List[Item], val id: StorageId) extends Actor {
   import Storage._
 
   var clients = Set.empty[ActorRef]

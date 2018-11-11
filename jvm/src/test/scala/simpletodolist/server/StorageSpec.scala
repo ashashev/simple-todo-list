@@ -1,13 +1,15 @@
 package simpletodolist.server
 
-import akka.actor.ActorSystem
-import akka.testkit.{TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
-import simpletodolist.library._
-import simpletodolist.server.Storage.{Disjoin, Join}
-
 import scala.concurrent.duration._
 import scala.language.postfixOps
+
+import akka.actor.ActorSystem
+import akka.testkit.{TestKit, TestProbe}
+
+import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
+
+import simpletodolist.library._
+import simpletodolist.server.Storage.{Disjoin, Join}
 
 class StorageSpec(_system: ActorSystem)
   extends TestKit(_system)
@@ -23,7 +25,7 @@ class StorageSpec(_system: ActorSystem)
 
   "A Storage Actor" should "pass on a Replace message when instructed to" in {
     val testProbe = TestProbe()
-    val storage = system.actorOf(Storage.props(List.empty))
+    val storage = system.actorOf(Storage.props(List.empty, StorageId.ZERO))
     testProbe send(storage, Join)
     testProbe send(storage, Get)
     testProbe.expectMsg(500 millis, Replace(List.empty))
@@ -34,7 +36,7 @@ class StorageSpec(_system: ActorSystem)
     val todolist = Item(Item.createId(), false, "item 1") ::
       Item(Item.createId(), true, "item 2") ::
       Nil
-    val storage = system.actorOf(Storage.props(todolist))
+    val storage = system.actorOf(Storage.props(todolist, StorageId.ZERO))
     testProbe send(storage, Join)
     testProbe send(storage, Get)
     testProbe.expectMsg(500 millis, Replace(todolist))
@@ -45,7 +47,7 @@ class StorageSpec(_system: ActorSystem)
       Item(Item.createId(), true, "item 2") ::
       Nil
 
-    val storage = system.actorOf(Storage.props(todolist))
+    val storage = system.actorOf(Storage.props(todolist, StorageId.ZERO))
     val probe1 = TestProbe()
     val probe2 = TestProbe()
 
@@ -68,7 +70,7 @@ class StorageSpec(_system: ActorSystem)
       Item(Item.createId(), true, "item 2") ::
       Nil
 
-    val storage = system.actorOf(Storage.props(todolist))
+    val storage = system.actorOf(Storage.props(todolist, StorageId.ZERO))
 
     val probe1 = TestProbe()
     val probe2 = TestProbe()
@@ -86,7 +88,7 @@ class StorageSpec(_system: ActorSystem)
     val updCmd2 = Update(todolist.head)
     probe2 send(storage, updCmd2)
     probe2 expectMsg(500 millis, updCmd2)
-    probe1 expectNoMsg(1 second)
+    probe1 expectNoMessage(1 second)
   }
 
   it should "replace a TODO list and pass on a Replace message to the clients when instructed to" in {
@@ -94,7 +96,7 @@ class StorageSpec(_system: ActorSystem)
       Item(Item.createId(), true, "item 1-2") ::
       Nil
 
-    val storage = system.actorOf(Storage.props(todolist1))
+    val storage = system.actorOf(Storage.props(todolist1, StorageId.ZERO))
 
     val probe1 = TestProbe()
     val probe2 = TestProbe()
@@ -118,7 +120,7 @@ class StorageSpec(_system: ActorSystem)
     val todolist1 = Item(Item.createId(), false, "item 1-1") ::
       Item(Item.createId(), true, "item 1-2") ::
       Nil
-    val storage = system.actorOf(Storage.props(todolist1))
+    val storage = system.actorOf(Storage.props(todolist1, StorageId.ZERO))
 
     val probe1 = TestProbe()
 
