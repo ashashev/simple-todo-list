@@ -135,4 +135,12 @@ class StorageSpec(_system: ActorSystem)
     probe1 send (storage, Get)
     probe1 expectMsg(500 millis, Replace(todolist2))
   }
+
+  it should "send back the ID" in {
+    val storage = system.actorOf(Storage.props(List(), StorageId.ZERO))
+    val probe = TestProbe()
+
+    probe send(storage, Storage.GetId)
+    probe expectMsg(500 millis, StorageId.ZERO)
+  }
 }

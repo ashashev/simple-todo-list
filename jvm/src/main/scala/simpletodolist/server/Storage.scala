@@ -8,6 +8,7 @@ object Storage {
   def props(items: List[Item], id: StorageId) = Props(new Storage(items, id))
   case object Join
   case object Disjoin
+  case object GetId
 }
 
 class Storage(var items: List[Item], val id: StorageId) extends Actor {
@@ -20,6 +21,8 @@ class Storage(var items: List[Item], val id: StorageId) extends Actor {
       clients += sender()
     case Disjoin =>
       clients -= sender()
+    case GetId =>
+      sender() ! id
     case Get =>
       sender() ! Replace(items)
     case Replace(newItems) =>
