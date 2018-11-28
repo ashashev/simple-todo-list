@@ -43,3 +43,6 @@ lazy val work = crossProject(JSPlatform, JVMPlatform).
       "org.scala-js" %%% "scalajs-dom" % "0.9.6"
     )
   )
+
+lazy val workJVM = work.jvm
+lazy val workJS = work.js
