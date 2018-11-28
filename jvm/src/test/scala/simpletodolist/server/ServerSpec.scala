@@ -72,6 +72,14 @@ class FullTestKitExampleSpec extends FlatSpecLike with Matchers with ScalatestRo
     }
   }
 
+  "The request to the /lists" should "return 404 error for a not WS requests" in {
+    val fakeStorage = TestProbe()
+    val server = Server(fakeStorage.ref)
+
+    Get("/lists") ~> server.route ~> check {
+      status shouldEqual StatusCodes.NotFound
+    }
+  }
 }
 
 
