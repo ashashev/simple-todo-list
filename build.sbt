@@ -2,12 +2,19 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 name := "simple-todo-list"
 
-ThisBuild / scalaVersion := "2.12.4"
+ThisBuild / scalaVersion := "2.12.8"
 
 lazy val akkaHttpVersion = "10.1.5"
 lazy val akkaVersion = "2.5.18"
 lazy val akkaStreamVersion = akkaVersion
 lazy val scalaTestVersion = "3.0.5"
+
+lazy val root = project.in(file(".")).
+  aggregate(workJS, workJVM).
+  settings(
+    publish := {},
+    publishLocal := {}
+  )
 
 lazy val work = crossProject(JSPlatform, JVMPlatform).
   crossType(CrossType.Full).in(file(".")).
@@ -43,6 +50,5 @@ lazy val work = crossProject(JSPlatform, JVMPlatform).
       "org.scala-js" %%% "scalajs-dom" % "0.9.6"
     )
   )
-
 lazy val workJVM = work.jvm
 lazy val workJS = work.js
