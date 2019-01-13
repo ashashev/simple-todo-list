@@ -12,7 +12,7 @@ import akka.stream.ActorMaterializer
 
 import org.apache.commons.daemon._
 
-import simpletodolist.library.{Item, StorageId}
+import simpletodolist.library.{StorageInfo, StorageId}
 
 class Main extends Daemon {
 
@@ -21,8 +21,8 @@ class Main extends Daemon {
   import system.dispatcher
 
 
-  val storage = system.actorOf(Storage.props(List.empty[Item], StorageId.ZERO))
-  val server = Server(storage)
+  val sm = system.actorOf(StorageManager.props(StorageInfo(StorageId.ZERO, "Main") :: Nil))
+  val server = Server(sm)
 
   implicit val bind: Future[Http.ServerBinding] = Http().bindAndHandle(
     Route.handlerFlow(server.route),

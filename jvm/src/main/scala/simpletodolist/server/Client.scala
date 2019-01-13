@@ -29,6 +29,7 @@ class Client(storage: ActorRef) extends Actor {
   }
 
   override def postStop(): Unit = {
+    //TODO: The storage can die before the client, so we should handle this case and not send the Disjoin message
     storage ! Storage.Disjoin
   }
 

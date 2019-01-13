@@ -9,6 +9,7 @@ import akka.testkit.{TestKit, TestProbe}
 import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 
 import simpletodolist.library._
+import StorageManager._
 
 class StorageManagerSpec(_system: ActorSystem)
   extends TestKit(_system)
@@ -30,7 +31,7 @@ class StorageManagerSpec(_system: ActorSystem)
   }
 
   def withStorageManagerAndProbe(infos: List[StorageInfo])(testCode: (ActorRef, TestProbe) => Any) = {
-    val sm = system.actorOf(StorageManager.props(infos), "StorageManager")
+    val sm = system.actorOf(StorageManager.props(infos))
     val probe = TestProbe()
 
     try {
