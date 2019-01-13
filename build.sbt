@@ -4,10 +4,11 @@ name := "simple-todo-list"
 
 ThisBuild / scalaVersion := "2.12.8"
 
-lazy val akkaHttpVersion = "10.1.5"
-lazy val akkaVersion = "2.5.18"
+lazy val akkaHttpVersion = "10.1.7"
+lazy val akkaVersion = "2.5.19"
 lazy val akkaStreamVersion = akkaVersion
 lazy val scalaTestVersion = "3.0.5"
+lazy val json4sNativeVersion = "3.6.3"
 
 lazy val root = project.in(file(".")).
   aggregate(workJS, workJVM).
@@ -38,7 +39,8 @@ lazy val work = crossProject(JSPlatform, JVMPlatform).
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
       "com.typesafe.akka" %% "akka-stream" % akkaStreamVersion,
       "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamVersion % Test,
-      "commons-daemon" % "commons-daemon" % "1.0.15"
+      "commons-daemon" % "commons-daemon" % "1.0.15",
+      "org.json4s" %% "json4s-native" % json4sNativeVersion
     )
   ).
   jsSettings(
