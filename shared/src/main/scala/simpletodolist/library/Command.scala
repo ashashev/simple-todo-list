@@ -11,7 +11,7 @@ object Command {
   }
 }
 
-trait Command {
+sealed trait Command {
   def toRaw: String
 }
 
@@ -19,10 +19,10 @@ case object Get extends Command {
   override def toRaw = "@GET@\n"
 }
 
-sealed case class Update(i: Item) extends Command {
+case class Update(i: Item) extends Command {
   override def toRaw = "@UPD@\n" + i.toRaw
 }
 
-sealed case class Replace(is: List[Item]) extends Command {
+case class Replace(is: List[Item]) extends Command {
   override def toRaw = "@REP@\n" + (is map (_.toRaw) mkString "\n")
 }

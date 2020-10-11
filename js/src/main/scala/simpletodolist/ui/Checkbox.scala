@@ -1,7 +1,7 @@
 package simpletodolist.ui
 
 import scala.language.implicitConversions
-import scala.language.reflectiveCalls
+import scala.reflect.Selectable.reflectiveSelectable
 
 import org.scalajs.dom
 import dom.document

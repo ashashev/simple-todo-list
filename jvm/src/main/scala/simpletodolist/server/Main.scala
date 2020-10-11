@@ -1,74 +1,34 @@
 package simpletodolist.server
 
-import akka.actor.ActorSystem
-import org.apache.commons.daemon._
-import simpletodolist.library.Item
+import scala.language.implicitConversions
+import scala.concurrent.ExecutionContext
+
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
-
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success}
-import scala.concurrent.{Await, Future}
-import scala.io.StdIn
-
-class Main extends Daemon {
-
-  implicit val system = ActorSystem()
-  implicit val materializer = ActorMaterializer()
-  import system.dispatcher
-
-
-  val storage = system.actorOf(Storage.props(List.empty[Item]))
-  val server = Server(storage)
-
-  implicit val bind: Future[Http.ServerBinding] = Http().bindAndHandle(
-    Route.handlerFlow(server.route),
-    sys.props.getOrElse("listening.interface", "localhost"),
-    sys.props.getOrElse("listening.port", "8080").toInt
-  )
-
-  def init(daemonContext: DaemonContext): Unit = {
-    init(daemonContext.getArguments)
-  }
-
-  def init(args: Array[String]): Unit = {
-    println("init")
-  }
-
-  def start(): Unit = {
-    println("start")
-    bind.onComplete(_ match {
-      case Success(b) => println(s"Server online at ${b.localAddress.getHostString}:${b.localAddress.getPort}")
-      case Failure(e) => System.err.println(s"Server didn't started: ${e.getLocalizedMessage}")
-    })
-  }
-
-  def stop(): Unit = {
-    println("stop")
-    val end = bind.map { _.unbind() }
-    Await.ready(end, Duration.Inf)
-    server.sharedKillSwitch.shutdown()
-    system.terminate()
-  }
-
-  def destroy(): Unit = {
-    println("destroy")
-  }
-}
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
 
 object Main {
-  private lazy val server = new Main
-
   def main(args: Array[String]): Unit = {
-    server.init(Array.empty[String])
-    server.start()
 
-    println("\n>>>>>>>>>> Press RETURN to stop... <<<<<<<<<<\n")
-    StdIn.readLine() // let it run until user presses return
+    given system as ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
+    given ExecutionContext = system.executionContext
 
-    server.stop()
-    server.destroy()
+    val route =
+      path("hello") {
+        get {
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>"))
+        }
+      }
+
+    val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
+
+    println(">>>>>>>>> Press Enter to stop... <<<<<<<<")
+    scala.io.StdIn.readLine()
+
+    bindingFuture
+    .flatMap(_.unbind()) // trigger unbinding from the port
+    .onComplete(_ => system.terminate()) // and shutdown when done
   }
 }
-

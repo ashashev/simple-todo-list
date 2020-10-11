@@ -1,12 +1,15 @@
 package simpletodolist.ui
 
+import scala.collection.immutable.Queue
+import scala.language.implicitConversions
+
 import org.scalajs.dom._
+
 import simpletodolist.library._
 
-import scala.collection.immutable.Queue
 
 trait Control {
-  def init()
+  def init(): Unit
 
   protected def getElementById[T](id: String) = {
     document.getElementById(id).asInstanceOf[T]
@@ -17,13 +20,13 @@ trait Control {
   }
 
   protected def setState(el: Element)(state: States.State): Unit = {
-    if (el != null) {
+    if el != null then {
       States.allStates foreach { s =>
-        if (s == state) {
-          if (!el.classList.contains(s.cssClass))
+        if s == state then {
+          if !el.classList.contains(s.cssClass) then
             el.classList.add(state.cssClass)
         } else {
-          if (el.classList.contains(s.cssClass))
+          if el.classList.contains(s.cssClass) then
             el.classList.remove(s.cssClass)
         }
       }
@@ -71,11 +74,10 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
 
   override def onConnect(on: Boolean): Unit = {
     println(s"connection to ${config.wsUrl} is $on")
-    if (on) {
+    if on then
       requestAll()
-    } else {
+    else
       setState(States.error)
-    }
   }
 
   override def onReceive(cmd: Command): Unit = {
@@ -85,13 +87,14 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
       case Replace(data) =>
         items = data
         recreateItems()
-        if (delayed.nonEmpty) {
+        if delayed.nonEmpty then {
           for (c <- delayed if items.exists(_.id == c.i.id)) ws.send(c.toRaw)
           delayed = Queue.empty
         }
       case Update(newItem) =>
         val ind = items.indexWhere(newItem.id == _.id)
-        if (ind == -1) requestAll()
+        if ind == -1 then
+          requestAll()
         else {
           items = items.updated(ind, newItem)
           recreateItems()
@@ -110,7 +113,7 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
     val ind = items.indexWhere(id == _.id)
     val newItem = items(ind).copy(checked = checkbox.checked)
     items = items.updated(ind, newItem)
-    if (ws.connected)
+    if ws.connected then
       ws.send(Update(newItem).toRaw)
     else {
       delayed = delayed.filterNot(_.i.id == newItem.id) :+ Update(newItem)
@@ -138,7 +141,7 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
 
   def onFocus(focusEvent: FocusEvent): Unit = {
     println("onFocus")
-    if (!ws.connected)
+    if !ws.connected then
       ws.connect(config.wsUrl)
   }
 
@@ -149,8 +152,8 @@ private class Viewer(config: Config) extends Control with WsTransport.Observer {
   override def init(): Unit = {
     println("Viewer")
     setState(States.error)
-    window.onfocus = onFocus
-    window.onblur = onBlur
+    window.onfocus = onFocus(_)
+    window.onblur = onBlur(_)
     ()
   }
 }
@@ -177,15 +180,16 @@ private class Editor(config: Config) extends Control {
     def finished(): Unit = ()
 
     def replaceAction(data: List[Item]): Unit =
-      todolist.value = data.map(i => (if (i.checked) "+" else "") + i.text).mkString("\n")
+      todolist.value = data.map(i => (if i.checked then "+" else "") + i.text).mkString("\n")
 
     override def onConnect(on: Boolean): Unit = {
-      if (on) connectAction()
-      else if (isAbleChangeState) setState(stateEl)(States.error)
+      if on then connectAction()
+      else if isAbleChangeState then
+        setState(stateEl)(States.error)
     }
 
     override def onReceive(cmd: Command): Unit = cmd match {
-      case Replace(data) => if (isAbleChangeState) {
+      case Replace(data) if isAbleChangeState =>
         setState(stateEl)(States.connected)
         replaceAction(data)
         canChangeState = false
@@ -193,7 +197,6 @@ private class Editor(config: Config) extends Control {
         ws.close()
         worker = None
         finished()
-      }
       case _ => ()
     }
 

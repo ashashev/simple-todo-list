@@ -1,5 +1,7 @@
 package simpletodolist.ui
 
+import scala.language.implicitConversions
+
 object Main {
   val control = Control(Config(Globals.config.toMap))
 
@@ -8,4 +10,3 @@ object Main {
   }
 
 }
-

@@ -86,10 +86,10 @@ final class WsTransport {
 
     socket = Some(new WebSocket(url))
     socket.map { socket =>
-      socket.onopen = onOpen
-      socket.onclose = onClose
-      socket.onerror = onError
-      socket.onmessage = onMessage
+      socket.onopen = onOpen(_)
+      socket.onclose = onClose(_)
+      socket.onerror = onError(_)
+      socket.onmessage = onMessage(_)
     }
   }
 

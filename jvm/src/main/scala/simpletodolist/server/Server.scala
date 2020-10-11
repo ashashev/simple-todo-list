@@ -1,58 +1,58 @@
 package simpletodolist.server
 
-import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, PoisonPill}
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
-import akka.stream.scaladsl.{Flow, Sink, Source}
-import akka.stream.{KillSwitches, OverflowStrategy}
-import akka.http.scaladsl.server.Directives._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import akka.stream.Materializer
+import akka.stream.OverflowStrategy
+import akka.stream.scaladsl.BroadcastHub
+import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.Keep
+import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.Source
+
 import simpletodolist.library.Command
+import simpletodolist.library.Get
+import simpletodolist.library.Item
+import simpletodolist.library.ListId
+import simpletodolist.library.Replace
+import simpletodolist.library.Update
+import simpletodolist.storage.Event
+import simpletodolist.storage.Replaced
+import simpletodolist.storage.Storage
+import simpletodolist.storage.Updated
+
+class Server(storage: Storage[Future])( using materializer: Materializer, ec: ExecutionContext)
+    extends Routes {
+
+  import Server._
+
+  val (storageEventsQueue, storageEventsSource) =
+    Source.queue[Event](100, OverflowStrategy.fail).toMat(BroadcastHub.sink)(Keep.both).run()
+
+  private val subscription = storage.subscribe(evt => storageEventsQueue.offer(evt))
+  storageEventsSource.runWith(Sink.ignore)
+
+  def pipeline: Flow[Command, Command, Any] =
+    Flow[Command].mapAsync[Option[List[Item]] | Unit](1) {
+      case Get => storage.get(DEFAULT_LIST)
+      case Update(item) => storage.update(DEFAULT_LIST, item)
+      case Replace(items) => storage.replace(DEFAULT_LIST, items)
+    }
+    .collect[Command] {
+      case Some(items) => Replace(items)
+      case None => Replace(Nil)
+    }
+    .mergePreferred(
+      storageEventsSource.map {
+        case Updated(_, item) => Update(item)
+        case Replaced(_, items) => Replace(items)
+      },
+      priority = false,
+      eagerComplete = true
+    )
+}
 
 object Server {
-  def apply(storage: ActorRef)(implicit system: ActorSystem): Server =
-    new Server(storage, system)
+  val DEFAULT_LIST: ListId = "default-list"
 }
-
-/**
-  * The server handles incoming http-connections.
-  * It regards a WebSocket connections as a command connections and routes ones to the storage.
-  *
-  * @param storage
-  * @param system
-  */
-class Server(storage: ActorRef, implicit private val system: ActorSystem) {
-
-  val sharedKillSwitch = KillSwitches.shared("my-kill-switch")
-
-  private def newClient(): Flow[Message, Message, NotUsed] = {
-    val clientActor = system.actorOf(Client.props(storage))
-
-    val incomingMessages: Sink[Message, NotUsed] =
-      Flow[Message].flatMapConcat {
-        case TextMessage.Strict(text) => Source(Command(text) :: Nil)
-        case TextMessage.Streamed(in) => in.reduce(_ + _).map(Command(_))
-      }.to(Sink.actorRef[Command](clientActor, PoisonPill))
-
-    val outgoingMessages: Source[Message, NotUsed] =
-      Source.actorRef[Command](10, OverflowStrategy.fail)
-        .mapMaterializedValue { outActor =>
-          clientActor ! Client.Connected(outActor)
-          NotUsed
-        }.map {
-        cmd => TextMessage(cmd.toRaw)
-      }
-    Flow.fromSinkAndSource(incomingMessages, outgoingMessages).via(sharedKillSwitch.flow)
-  }
-
-  val route = {
-    get {
-      handleWebSocketMessages(newClient())
-    } ~
-    get {
-      complete(HttpResponse(StatusCodes.NotFound, entity = StatusCodes.NotFound.defaultMessage))
-    }
-  }
-}
-
-
