@@ -22,13 +22,6 @@ object Main {
         }
       }
 
-    val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
-
-    println(">>>>>>>>> Press Enter to stop... <<<<<<<<")
-    scala.io.StdIn.readLine()
-
-    bindingFuture
-    .flatMap(_.unbind()) // trigger unbinding from the port
-    .onComplete(_ => system.terminate()) // and shutdown when done
+    val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route)
   }
 }

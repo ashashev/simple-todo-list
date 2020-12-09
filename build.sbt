@@ -38,6 +38,7 @@ lazy val work = crossProject(JSPlatform, JVMPlatform)
     ).map(_.withDottyCompat(scalaVersion.value)),
     testFrameworks += new TestFramework("munit.Framework")
   )
+  .jvmConfigure(_.enablePlugins(JavaServerAppPackaging, SystemdPlugin))
   .jvmSettings(
     // Add JVM-specific settings here
     name := "simple-todo-list-server",
@@ -45,7 +46,6 @@ lazy val work = crossProject(JSPlatform, JVMPlatform)
       val akkaVersion = "2.6.10"
       val akkaHttpVersion = "10.2.1"
       Seq(
-        "commons-daemon" % "commons-daemon" % "1.2.3",
         "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
         "com.typesafe.akka" %% "akka-stream" % akkaVersion,
         "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
@@ -54,7 +54,10 @@ lazy val work = crossProject(JSPlatform, JVMPlatform)
       ).map(_.withDottyCompat(scalaVersion.value))
     },
     libraryDependencies ++= Seq(
-    )
+    ),
+    Linux / maintainer := "Aleksei Shashev <ashashev@gmail.com>",
+    maintainer := "Aleksei Shashev <ashashev@gmail.com>",
+    dockerExposedPorts := Seq(8080)
   )
   .jsSettings(
     // Add JS-specific settings here
