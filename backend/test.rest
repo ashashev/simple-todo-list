@@ -1,0 +1,50 @@
+#
+#
+#
+http://localhost:8080
+Content-Type: application/json
+-i
+
+listId = list1
+--
+
+#
+# Get TodoList
+#
+--
+GET /list/:listId
+
+#
+# POST TodoList
+#
+--
+POST /list/:listId
+{
+  "name": "list #1",
+  "items": [
+    {
+      "id": "i1",
+      "value": "item1",
+      "checked": true
+    },
+    {
+      "id": "i2",
+      "value": "item2",
+      "checked": false
+    },
+    {
+      "id": "i3",
+      "value": "item3",
+      "checked": true
+    }
+  ]
+}
+
+#
+# POST TodoList/item
+#
+--
+POST /list/:listId/item/i1
+{
+  "checked": true
+}
