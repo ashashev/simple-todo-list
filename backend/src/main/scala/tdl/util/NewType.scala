@@ -1,8 +1,9 @@
 package tdl.util
 
 import io.circe.Decoder
+import tdl.util.BaseNewType
 
-trait NewType[Raw] extends BaseNewTyped[Raw]:
+trait NewType[Raw] extends BaseNewType[Raw]:
   def apply(v: Raw): Type = make(v)
 
   given (using rawDec: Decoder[Raw]): Decoder[Type] =

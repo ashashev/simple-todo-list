@@ -3,7 +3,7 @@ package tdl.util
 import cats.Show
 import io.circe.Encoder
 
-private trait BaseNewTyped[Raw]:
+private trait BaseNewType[Raw]:
 
   opaque type Type = Raw
 
@@ -32,4 +32,4 @@ private trait BaseNewTyped[Raw]:
 
   extension (t: Type) def toRaw: Raw = t
 
-end BaseNewTyped
+end BaseNewType
