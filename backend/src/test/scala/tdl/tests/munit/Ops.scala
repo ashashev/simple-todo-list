@@ -1,12 +1,9 @@
 package tdl.tests.munit
 
-import munit.Assertions
-import cats.effect.IO
-import cats.effect.Outcome
 import cats.MonadThrow
-import cats.ApplicativeThrow
+import cats.effect.Outcome
 import cats.implicits.*
-import cats.syntax.all.given
+import munit.Assertions
 
 object Ops:
   extension [M[_]: MonadThrow, A](io: M[Outcome[M, Throwable, A]])

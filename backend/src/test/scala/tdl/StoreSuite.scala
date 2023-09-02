@@ -6,7 +6,6 @@ import cats.effect.*
 import cats.effect.kernel.Outcome.Succeeded
 import cats.instances.all.given
 import cats.syntax.all.given
-import fs2.concurrent.Signal
 import fs2.concurrent.SignallingRef
 import munit.CatsEffectSuite
 
@@ -16,8 +15,8 @@ import tdl.model.ListId
 import tdl.model.Record
 import tdl.model.RecordId
 import tdl.model.TodoStore
-import tdl.util.NonEmptyString
 import tdl.tests.munit.Ops.*
+import tdl.util.NonEmptyString
 
 class StoreSuite extends CatsEffectSuite:
 

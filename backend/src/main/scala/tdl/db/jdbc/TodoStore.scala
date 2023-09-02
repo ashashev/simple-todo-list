@@ -2,19 +2,15 @@ package tdl.db.jdbc
 
 import cats.effect.MonadCancelThrow
 import cats.implicits.given
-import cats.syntax.given
-import doobie.LogHandler
 import doobie.Transactor
 import doobie.implicits.given
-import doobie.given
 
-import tdl.model.ListId
-import tdl.util.NonEmptyString
-import tdl.model.RecordId
 import tdl.model
-import tdl.db.jdbc.scheme
+import tdl.model.ListId
+import tdl.model.RecordId
+import tdl.util.NonEmptyString
 
-class TodoStore[F[_]: MonadCancelThrow](tr: Transactor[F])(using h: LogHandler)
+class TodoStore[F[_]: MonadCancelThrow](tr: Transactor[F])
     extends tdl.model.TodoStore[F]:
 
   def getLists(): F[List[(ListId, NonEmptyString)]] =
@@ -62,7 +58,6 @@ class TodoStore[F[_]: MonadCancelThrow](tr: Transactor[F])(using h: LogHandler)
 end TodoStore
 
 object TodoStore:
-  def apply[F[_]: MonadCancelThrow](tr: Transactor[F])(using
-      h: LogHandler = LogHandler.nop,
-  ): TodoStore[F] = new TodoStore[F](tr)
+  def apply[F[_]: MonadCancelThrow](tr: Transactor[F]): TodoStore[F] =
+    new TodoStore[F](tr)
 end TodoStore

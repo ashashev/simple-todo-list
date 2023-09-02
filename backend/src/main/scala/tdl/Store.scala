@@ -1,21 +1,18 @@
 package tdl
 
 import cats.Monad
-import cats.effect.MonadCancel
-import cats.effect.Ref
 import cats.Parallel
-import cats.effect.Fiber
 import cats.effect.Concurrent
-import cats.effect.GenConcurrent
+import cats.effect.MonadCancel
 import cats.effect.std.Mutex
 import cats.syntax.all.given
 import fs2.concurrent.Topic
 
+import tdl.api.ItemUpdated
+import tdl.api.ListUpdated
+import tdl.api.WsEvent
 import tdl.model.*
 import tdl.util.*
-import tdl.api.WsEvent
-import tdl.api.ListUpdated
-import tdl.api.ItemUpdated
 
 class Store[F[_]: Parallel](
     store: TodoStore[F],

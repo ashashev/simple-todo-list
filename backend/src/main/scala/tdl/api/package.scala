@@ -1,11 +1,10 @@
 package tdl
 
-import io.circe.Encoder
-import io.circe.Decoder
 import cats.effect.Concurrent
 import cats.implicits.*
+import io.circe.Decoder
+import io.circe.Encoder
 import org.http4s.*
-import org.http4s.implicits.given
 import org.http4s.circe.*
 
 import tdl.model.*

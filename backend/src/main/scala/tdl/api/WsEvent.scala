@@ -1,9 +1,8 @@
 package tdl.api
 
-import io.circe.Encoder
 import io.circe.Decoder
+import io.circe.Encoder
 import io.circe.syntax.given
-import io.circe.syntax.*
 
 import tdl.model.*
 import tdl.util.NonEmptyString

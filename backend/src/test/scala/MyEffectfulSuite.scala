@@ -1,12 +1,7 @@
-import munit.CatsEffectSuite
 import cats.effect.*
-import cats.syntax.all.given
 import cats.instances.all.given
-import cats.effect.std.Random.apply
-import cats.effect.std.Random
-import fs2.concurrent.SignallingRef
-import cats.effect.kernel.Outcome.Succeeded
-import fs2.concurrent.Signal
+import cats.syntax.all.given
+import munit.CatsEffectSuite
 
 class MyEffectfulSuite extends CatsEffectSuite:
 
@@ -35,7 +30,7 @@ class MyEffectfulSuite extends CatsEffectSuite:
       _ <- IO(println(munitPrint(s"result: $v")))
     yield v
 
-    got.flatMap(a => IO(assertNotEquals(a, incNumber * fibersNumber)))
+    got.map(a => assertNotEquals(a, incNumber * fibersNumber))
   }
 
   test("concurrent ref good") {
@@ -46,7 +41,7 @@ class MyEffectfulSuite extends CatsEffectSuite:
       v <- ref.get
     yield v
 
-    assertIO(got, incNumber * fibersNumber)
+    got.map(a => assertEquals(a, incNumber * fibersNumber))
   }
 
 end MyEffectfulSuite

@@ -5,7 +5,6 @@ import scala.concurrent.duration._
 import cats.effect.*
 import cats.effect.kernel.Outcome.Succeeded
 import cats.effect.std.Random
-import cats.effect.std.Random.apply
 import cats.instances.all.given
 import cats.syntax.all.given
 import fs2.concurrent.Signal

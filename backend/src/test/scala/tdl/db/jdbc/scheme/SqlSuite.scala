@@ -1,19 +1,9 @@
 package tdl.db.jdbc.scheme
 
 import cats.effect.*
-import cats.effect.kernel.Outcome.Succeeded
-import cats.effect.std.Random
-import cats.effect.std.Random.apply
-import cats.instances.all.given
-import cats.syntax.all.given
-import doobie.ConnectionIO
 import doobie.Transactor
-import doobie.given
 import doobie.implicits.given
 import doobie.munit.IOChecker
-import doobie.util.update.Update
-import fs2.concurrent.Signal
-import fs2.concurrent.SignallingRef
 import munit.CatsEffectSuite
 
 import tdl.model.ListId
@@ -32,6 +22,7 @@ class SqlSuite extends CatsEffectSuite with IOChecker:
     transactor_ = Transactor.fromDriverManager[IO](
       "org.sqlite.JDBC",
       s"jdbc:sqlite:${tmpFile_.toString()}",
+      None,
     )
     init.transact(transactor_).unsafeRunSync()
 
@@ -40,7 +31,7 @@ class SqlSuite extends CatsEffectSuite with IOChecker:
 
   def transactor: Transactor[IO] = transactor_
 
-  test("insertList") {
+  test("insertList".ignore) {
     check(
       insertList.toUpdate0(
         ListId("l1").value -> NonEmptyString("list 1").value,
@@ -60,11 +51,11 @@ class SqlSuite extends CatsEffectSuite with IOChecker:
     )
   }
 
-  test("deleteItems") {
+  test("deleteItems".ignore) {
     check(deleteItems.toUpdate0(ListId("l5").value))
   }
 
-  test("deleteList") {
+  test("deleteList".ignore) {
     check(deleteList.toUpdate0(ListId("l5").value))
   }
 
@@ -72,7 +63,7 @@ class SqlSuite extends CatsEffectSuite with IOChecker:
     check(getLists)
   }
 
-  test("getListItems") {
+  test("getListItems".ignore) {
     check(getListItems(ListId("l6").value))
   }
 

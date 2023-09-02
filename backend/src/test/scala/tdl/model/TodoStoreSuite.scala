@@ -1,17 +1,8 @@
 package tdl.model
 
-import cats.Functor
-import cats.Monad
 import cats.effect.*
-import cats.effect.kernel.Outcome.Succeeded
-import cats.effect.std.Random
-import cats.effect.std.Random.apply
-import cats.instances.all.given
 import cats.syntax.all.given
-import doobie.given
 import doobie.implicits.given
-import fs2.concurrent.Signal
-import fs2.concurrent.SignallingRef
 import munit.CatsEffectSuite
 
 import tdl.tests.munit.Ops.*
@@ -27,6 +18,7 @@ class TodoStoreSuite extends CatsEffectSuite:
     transactor_ = doobie.Transactor.fromDriverManager[IO](
       "org.sqlite.JDBC",
       s"jdbc:sqlite:${tmpFile_.toString()}",
+      None,
     )
     tdl.db.jdbc.scheme.init.transact(transactor_).unsafeRunSync()
 

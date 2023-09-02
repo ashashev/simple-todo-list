@@ -2,10 +2,7 @@ package tdl
 
 import cats.Monad
 import cats.Parallel
-import cats.effect.Fiber
 import cats.effect.GenConcurrent
-import cats.effect.GenSpawn
-import cats.effect.kernel.Ref
 import cats.effect.std.Mutex
 import cats.effect.std.Queue
 import cats.instances.all.given

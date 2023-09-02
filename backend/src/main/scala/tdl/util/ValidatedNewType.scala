@@ -4,9 +4,7 @@ import cats.Show
 import cats.data.NonEmptyList
 import cats.data.ValidatedNel
 import cats.implicits.given
-import cats.syntax.*
 import io.circe.Decoder
-import tdl.util.BaseNewType
 
 trait ValidatedNewType[Raw] extends BaseNewType[Raw]:
   /** Validation checks whether type can be constructed or not. It returns None

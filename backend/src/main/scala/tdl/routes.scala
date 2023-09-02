@@ -6,13 +6,12 @@ import io.circe.syntax.*
 import org.http4s.EntityEncoder
 import org.http4s.HttpRoutes
 import org.http4s.ServerSentEvent
-import org.http4s.dsl.io.*
-import org.http4s.implicits.given
 import org.http4s.circe.*
+import org.http4s.dsl.io.*
 
-import tdl.model.*
 import tdl.api.*
 import tdl.api.PathExtractors.*
+import tdl.model.*
 
 def routes(store: Store[IO]) = HttpRoutes
   .of[IO] {
@@ -45,4 +44,3 @@ def routes(store: Store[IO]) = HttpRoutes
           .map(ev => ServerSentEvent(ev.asJson.noSpaces.some)),
       )
   }
-  .orNotFound

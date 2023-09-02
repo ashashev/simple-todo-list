@@ -3,10 +3,7 @@ package tdl
 import scala.concurrent.duration._
 
 import cats.effect.*
-import cats.effect.kernel.Outcome.Succeeded
 import cats.implicits.given
-import cats.instances.all.given
-import cats.syntax.all.given
 import fs2.concurrent.Signal
 import fs2.concurrent.SignallingRef
 import io.circe.Json
@@ -21,7 +18,6 @@ import org.http4s.headers.*
 import org.http4s.implicits.uri
 import scodec.bits.ByteVector
 
-import tdl.api.*
 import tdl.model.*
 import tdl.tests.munit.Ops.*
 import tdl.util.*
@@ -36,7 +32,9 @@ class RoutesSuite extends CatsEffectSuite:
       store <- Store[IO](TodoStore.memEmpty)
       cl = client(store)
       req = Request(method = Method.GET, uri = uri"/list")
-      _ <- assertIO(cl.expect[Json](req), expected)
+
+      obtained <- cl.expect[Json](req)
+      _ = assertEquals(obtained, expected)
     yield ()
   }
 
@@ -66,7 +64,9 @@ class RoutesSuite extends CatsEffectSuite:
       _ <- store.replace(lid2, name2, records2)
       cl = client(store)
       req = Request(method = Method.GET, uri = uri"/list")
-      _ <- assertIO(cl.expect[Json](req), expected)
+
+      obtained <- cl.expect[Json](req)
+      _ = assertEquals(obtained, expected)
     yield ()
   }
 
@@ -198,10 +198,12 @@ class RoutesSuite extends CatsEffectSuite:
       intSig <- SignallingRef[IO].of(false)
       // got the list's changes
       got <- helper.subscribe(intSig, listId).use { join =>
-        // fill the list
-        helper.sendList(
-          listId,
-          """{
+        // Wait a bit for subscriber have started consuming events
+        IO.sleep(100.millis) *>
+          // fill the list
+          helper.sendList(
+            listId,
+            """{
             |  "name": "ToDo List",
             |  "items": [
             |    {
@@ -216,7 +218,7 @@ class RoutesSuite extends CatsEffectSuite:
             |    }
             |  ]
             |}""".stripMargin,
-        ) >>
+          ) *>
           // update item 'asd'
           helper.updateItem(
             listId,
@@ -224,16 +226,16 @@ class RoutesSuite extends CatsEffectSuite:
             """{
               |  "checked": true
               |}""".stripMargin,
-          ) >>
-          IO.sleep(100.millis) >>
+          ) *>
+          IO.sleep(100.millis) *>
           // close events stream
-          intSig.set(true) >>
+          intSig.set(true) *>
           // get final list
           {
             val req =
               Request(method = Method.GET, uri = uri"/list" / listId.toRaw)
-            assertIO(cl.expect[Json](req), expectingFinalList)
-          } >>
+            cl.expect[Json](req).map(a => assertEquals(a, expectingFinalList))
+          } *>
           join.value
       }
       // The test sends the new state immediately after subscribing of change
@@ -244,15 +246,13 @@ class RoutesSuite extends CatsEffectSuite:
         if got.size < expectingEvents.size
         then expectingEvents.head :: got
         else got
-      _ <- IO(assertEquals(fixedGot, expectingEvents))
+      _ = assertEquals(fixedGot, expectingEvents)
     yield ()
   }
 
   test("Multiple subscribers to list changes") {
     val listId1 = ListId("list-1").value
     val listId2 = ListId("list-2").value
-    val name1 = NonEmptyString("ToDo List #1").value
-    val name2 = NonEmptyString("ToDo List #2").value
 
     val expectingEvents1 =
       List(
@@ -378,9 +378,9 @@ class RoutesSuite extends CatsEffectSuite:
           // and close them
           intSig.set(true) >>
           // check results
-          assertIO(join1.value, expectingEvents1) >>
-          assertIO(join2.value, expectingEvents1) >>
-          assertIO(join3.value, expectingEvents2)
+          join1.value.map(a => assertEquals(a, expectingEvents1)) >>
+          join2.value.map(a => assertEquals(a, expectingEvents1)) >>
+          join3.value.map(a => assertEquals(a, expectingEvents2))
       }
     yield ()
   }
@@ -389,7 +389,9 @@ end RoutesSuite
 
 object RoutesSuite:
 
-  def client(store: Store[IO]): Client[IO] = Client.fromHttpApp(routes(store))
+  def client(store: Store[IO]): Client[IO] = Client.fromHttpApp(
+    routes(store).orNotFound,
+  )
 
   def sseParser[F[_]]: fs2.Pipe[F, Byte, Json] =
     _.through(ServerSentEvent.decoder)
@@ -405,7 +407,7 @@ object RoutesSuite:
       .interruptWhen(haltWhenTrue)
       .compile
       .toList
-      .background
+      .backgroundOn(scala.concurrent.ExecutionContext.global)
 
   def toEntity(s: String): Entity[IO] =
     Entity.strict(ByteVector(s.getBytes("utf8")))

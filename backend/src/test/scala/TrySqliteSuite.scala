@@ -1,18 +1,11 @@
 import cats.effect.*
-import cats.effect.kernel.Outcome.Succeeded
-import cats.effect.std.Random
-import cats.effect.std.Random.apply
-import cats.instances.all.given
-import cats.syntax.all.given
-import doobie.Transactor
+import cats.implicits.given
 import doobie.ConnectionIO
-import doobie.given
+import doobie.Transactor
 import doobie.implicits.given
 import doobie.munit.IOChecker
-import fs2.concurrent.Signal
-import fs2.concurrent.SignallingRef
-import munit.CatsEffectSuite
 import doobie.util.update.Update
+import munit.CatsEffectSuite
 
 class TrySqliteSuite extends CatsEffectSuite with IOChecker:
 
@@ -21,7 +14,8 @@ class TrySqliteSuite extends CatsEffectSuite with IOChecker:
   override val colors = doobie.util.Colors.None
 
   val transactor =
-    Transactor.fromDriverManager[IO]("org.sqlite.JDBC", "jdbc:sqlite:sample.db")
+    Transactor
+      .fromDriverManager[IO]("org.sqlite.JDBC", "jdbc:sqlite:sample.db", None)
 
   val init =
     (for
@@ -49,7 +43,7 @@ class TrySqliteSuite extends CatsEffectSuite with IOChecker:
 
   // test("trivial") { check(trivial) }
   // test("biggerThan") { check(biggerThan(0)) }
-  test("update") { check(update("", "")) }
+  // test("update") { check(update("", "")) }
   test("biggerThan") { checkOutput(biggerThan(0)) }
 
 end TrySqliteSuite

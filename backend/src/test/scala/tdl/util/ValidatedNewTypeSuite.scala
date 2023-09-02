@@ -1,8 +1,7 @@
 package tdl.util
 
-import cats.syntax.either.*
 import cats.data.NonEmptyList
-import cats.implicits.given
+import cats.syntax.either.*
 
 import tdl.tests.munit.Ops.*
 

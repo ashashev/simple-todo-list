@@ -3,7 +3,6 @@ package tdl.model
 import scala.collection.concurrent.TrieMap
 
 import cats.Monad
-import cats.instances.all.given
 import cats.syntax.all.given
 
 import tdl.util.NonEmptyString
@@ -37,7 +36,7 @@ object TodoStore:
                 Record(rid, value, checked)
               case r => r
             }).some
-        })
+        }) as {}
 
       def getLists(): F[List[(ListId, NonEmptyString)]] =
         Monad[F].unit.as(store.toList.map { case (lid, (name, _)) =>
