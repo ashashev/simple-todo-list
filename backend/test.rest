@@ -9,6 +9,12 @@ listId = list1
 --
 
 #
+# Get all lists
+#
+--
+GET /list
+
+#
 # Get TodoList
 #
 --

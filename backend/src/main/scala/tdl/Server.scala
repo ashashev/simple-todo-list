@@ -10,7 +10,8 @@ import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 
-import tdl.model.*
+//import tdl.model.*
+import tdl.db.jdbc
 
 object Server extends IOApp:
 
@@ -20,9 +21,9 @@ object Server extends IOApp:
 
   def run(args: List[String]): IO[ExitCode] =
     for
-      store <- Store[IO](TodoStore.memEmpty)
-      _ <- logger.info("asdsa")
-      _ <- logger.warn("asdsa")
+      // store <- Store[IO](TodoStore.memEmpty)
+      rs <- jdbc.TodoStore.sqlite[IO](Paths.get("simple-todo-list.db"))
+      store <- Store[IO](rs)
       ec <- EmberServerBuilder
         .default[IO]
         .withHost(ipv4"0.0.0.0")

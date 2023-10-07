@@ -9,6 +9,8 @@ import tdl.model
 import tdl.model.ListId
 import tdl.model.RecordId
 import tdl.util.NonEmptyString
+import java.nio.file.Path
+import cats.effect.kernel.Async
 
 class TodoStore[F[_]: MonadCancelThrow](tr: Transactor[F])
     extends tdl.model.TodoStore[F]:
@@ -60,4 +62,13 @@ end TodoStore
 object TodoStore:
   def apply[F[_]: MonadCancelThrow](tr: Transactor[F]): TodoStore[F] =
     new TodoStore[F](tr)
+
+  def sqlite[F[_]: MonadCancelThrow: Async](db: Path): F[TodoStore[F]] =
+    val xa = Transactor.fromDriverManager[F](
+      "org.sqlite.JDBC",
+      s"jdbc:sqlite:${db.toAbsolutePath().toString()}",
+      None,
+    )
+    scheme.init.transact(xa).as(apply(xa))
+
 end TodoStore
