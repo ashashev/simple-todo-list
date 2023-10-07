@@ -1,6 +1,9 @@
 package tdl
 
+import java.nio.file.Paths
+
 import cats.effect.*
+import cats.syntax.all.given
 import com.comcast.ip4s.*
 import org.http4s.ember.server.*
 import org.typelevel.log4cats.LoggerFactory
@@ -24,7 +27,11 @@ object Server extends IOApp:
         .default[IO]
         .withHost(ipv4"0.0.0.0")
         .withPort(port"8080")
-        .withHttpApp(routes(store).orNotFound)
+        .withHttpApp(
+          (routes(store) <+> staticRoutes(
+            Paths.get("..", "frontend"),
+          )).orNotFound,
+        )
         .build
         .use(_ => IO.never)
         .as(ExitCode.Success)
