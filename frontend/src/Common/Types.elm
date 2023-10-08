@@ -1,19 +1,23 @@
 module Common.Types exposing
     ( ItemUpdated
     , ListId(..)
+    , ListInfo
     , ListUpdated
     , Record
     , RecordId(..)
     , decoderItemUpdated
     , decoderListId
+    , decoderListInfo
     , decoderListUpdated
     , decoderRecord
     , decoderRecordId
     , encoderItemUpdated
     , encoderListId
+    , encoderListInfo
     , encoderListUpdated
     , encoderRecord
     , encoderRecordId
+    , toString
     )
 
 import Common.Json as CJ
@@ -21,6 +25,7 @@ import Json.Decode as JD
 import Json.Decode.Pipeline as JP
 import Json.Encode as JE
 import String.Nonempty exposing (NonemptyString)
+import String.Nonempty as NE
 
 
 type RecordId
@@ -51,6 +56,15 @@ type alias ListUpdated =
     , items : List Record
     }
 
+
+type alias ListInfo =
+    { lid : ListId
+    , name : NonemptyString
+    }
+
+
+toString : ListId -> String
+toString (ListId s) = NE.toString s
 
 decoderRecordId : JD.Decoder RecordId
 decoderRecordId =
@@ -120,4 +134,19 @@ encoderListUpdated ev =
         [ ( "lid", encoderListId ev.lid )
         , ( "name", CJ.encoderNonemptyString ev.name )
         , ( "items", JE.list encoderRecord ev.items )
+        ]
+
+
+decoderListInfo : JD.Decoder ListInfo
+decoderListInfo =
+    JD.succeed ListInfo
+        |> JP.required "lid" decoderListId
+        |> JP.required "name" CJ.decoderNonemptyString
+
+
+encoderListInfo : ListInfo -> JE.Value
+encoderListInfo ev =
+    JE.object <|
+        [ ( "lid", encoderListId ev.lid )
+        , ( "name", CJ.encoderNonemptyString ev.name )
         ]
