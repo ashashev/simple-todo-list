@@ -4,6 +4,7 @@ import Json.Decode as JD
 import Json.Encode as JE
 import String.Nonempty exposing (..)
 
+
 maybeLiftDecoder : String -> Maybe a -> JD.Decoder a
 maybeLiftDecoder err ma =
     case ma of
@@ -22,4 +23,5 @@ decoderNonemptyString =
 
 
 encoderNonemptyString : NonemptyString -> JE.Value
-encoderNonemptyString ne = JE.string <| toString ne
+encoderNonemptyString ne =
+    JE.string <| toString ne

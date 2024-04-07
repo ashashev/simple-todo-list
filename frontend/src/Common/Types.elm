@@ -17,6 +17,7 @@ module Common.Types exposing
     , encoderListUpdated
     , encoderRecord
     , encoderRecordId
+    , ridToString
     , toString
     )
 
@@ -24,8 +25,7 @@ import Common.Json as CJ
 import Json.Decode as JD
 import Json.Decode.Pipeline as JP
 import Json.Encode as JE
-import String.Nonempty exposing (NonemptyString)
-import String.Nonempty as NE
+import String.Nonempty as NE exposing (NonemptyString)
 
 
 type RecordId
@@ -64,7 +64,14 @@ type alias ListInfo =
 
 
 toString : ListId -> String
-toString (ListId s) = NE.toString s
+toString (ListId s) =
+    NE.toString s
+
+
+ridToString : RecordId -> String
+ridToString (RecordId s) =
+    NE.toString s
+
 
 decoderRecordId : JD.Decoder RecordId
 decoderRecordId =

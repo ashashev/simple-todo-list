@@ -58,4 +58,12 @@ def staticRoutes(path: nf.Path) = HttpRoutes.of[IO] {
     StaticFile
       .fromPath(Path.fromNioPath(path.resolve(p)), Some(req))
       .getOrElseF(NotFound())
+  case req @ GET -> Root / "view" / _ =>
+    StaticFile
+      .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
+      .getOrElseF(NotFound())
+  case req @ GET -> Root / "edit" / _ =>
+    StaticFile
+      .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
+      .getOrElseF(NotFound())
 }

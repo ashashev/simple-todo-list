@@ -5,7 +5,8 @@ http://localhost:8080
 Content-Type: application/json
 -i
 
-listId = list1
+listId1 = list1
+listId2 = list2
 --
 
 #
@@ -18,13 +19,13 @@ GET /list
 # Get TodoList
 #
 --
-GET /list/:listId
+GET /list/:listId1
 
 #
 # POST TodoList
 #
 --
-POST /list/:listId
+POST /list/:listId1
 {
   "name": "list #1",
   "items": [
@@ -50,7 +51,46 @@ POST /list/:listId
 # POST TodoList/item
 #
 --
-POST /list/:listId/item/i1
+POST /list/:listId1/item/i1
 {
   "checked": true
+}
+
+##############################################
+
+#
+# Get TodoList
+#
+--
+GET /list/:listId2
+
+#
+# POST TodoList
+#
+--
+POST /list/:listId2
+{
+  "name": "list #2",
+  "items": [
+    {
+      "id": "i1",
+      "value": "item1",
+      "checked": true
+    },
+    {
+      "id": "i2",
+      "value": "item2",
+      "checked": false
+    },
+    {
+      "id": "i3",
+      "value": "item3",
+      "checked": true
+    },
+    {
+      "id": "i4",
+      "value": "item4",
+      "checked": false
+    }
+  ]
 }
