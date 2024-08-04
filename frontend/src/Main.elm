@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Browser.Navigation as Nav
+import Common.Msg exposing (Msg(..))
 import Common.Types as CT
 import Debug
 import Fuzz exposing (result)
@@ -64,15 +65,6 @@ init flags url key =
 -- UPDATE
 
 
-type Msg
-    = LinkClicked Browser.UrlRequest
-    | UrlChanged Url.Url
-    | ItemChanged CT.RecordId Bool
-    | ListsLoaded (Result Http.Error (List CT.ListInfo))
-    | ListLoaded (Result Http.Error CT.ListUpdated)
-    | ItemUpdated (Result Http.Error CT.ItemUpdated)
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case Debug.log "message" msg of
@@ -106,7 +98,7 @@ update msg model =
                             in
                             Http.post
                                 { url = "/list/" ++ CT.toString l.lid ++ "/item/" ++ CT.ridToString rid
-                                , body = Http.jsonBody (JE.object [("checked", JE.bool checked)])
+                                , body = Http.jsonBody (JE.object [ ( "checked", JE.bool checked ) ])
                                 , expect = Http.expectString resultMapper
                                 }
             in
@@ -135,16 +127,36 @@ update msg model =
         ItemUpdated (Err err) ->
             ( { model | error = Just ( "item", err ) }, Cmd.none )
 
+
 updateItem : Model -> CT.ItemUpdated -> Model
 updateItem m item =
     let
-        x = 2
-        upd = List.map (\r -> if r.id == item.rid then {r | checked = item.checked} else r)
-        ncur = Maybe.map (\list ->
-            if list.lid /= item.lid then list
-            else {list | items = upd list.items}
-            ) m.current
-    in {m | current = ncur}
+        x =
+            2
+
+        upd =
+            List.map
+                (\r ->
+                    if r.id == item.rid then
+                        { r | checked = item.checked }
+
+                    else
+                        r
+                )
+
+        ncur =
+            Maybe.map
+                (\list ->
+                    if list.lid /= item.lid then
+                        list
+
+                    else
+                        { list | items = upd list.items }
+                )
+                m.current
+    in
+    { m | current = ncur }
+
 
 urlToCmd : Url.Url -> Maybe (Cmd Msg)
 urlToCmd url =

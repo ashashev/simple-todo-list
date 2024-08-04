@@ -5,7 +5,10 @@ main.js: $(elm_files)
 #	elm make --optimize src/Main.elm --output $@
 	elm make src/Main.elm --output $@
 
-.PHONY: fmt,test
+.PHONY: fmt,test,clean
+
+clean:
+	rm -rf main.js
 
 fmt:
 	elm-format --yes ./src
