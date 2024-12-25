@@ -13,3 +13,5 @@ type Msg
     | ListsLoaded (Result Http.Error (List CT.ListInfo))
     | ListLoaded (Result Http.Error CT.ListUpdated)
     | ItemUpdated (Result Http.Error CT.ItemUpdated)
+    | OpenDrawer
+    | CloseDrawer

@@ -2,7 +2,8 @@ module Main exposing (..)
 
 import Browser
 import Browser.Navigation as Nav
-import Common.Msg exposing (Msg(..))
+import Common.Model exposing (Model)
+import Common.Msg as Msg exposing (Msg)
 import Common.Types as CT
 import Debug
 import Fuzz exposing (result)
@@ -11,13 +12,9 @@ import Html.Attributes exposing (..)
 import Http
 import Json.Decode as JD
 import Json.Encode as JE
-import Material.Checkbox as Checkbox
-import Material.LayoutGrid as LayoutGrid
-import Material.List as MaterialList
-import Material.List.Item as ListItem
+import Pages.Main exposing (viewLists)
+import Pages.View exposing (viewPage)
 import Platform.Cmd as Cmd
-import String.Nonempty as NE exposing (NonemptyString)
-import Test exposing (only)
 import Url
 
 
@@ -32,22 +29,13 @@ main =
         , view = view
         , update = update
         , subscriptions = subscriptions
-        , onUrlChange = UrlChanged
-        , onUrlRequest = LinkClicked
+        , onUrlChange = Msg.UrlChanged
+        , onUrlRequest = Msg.LinkClicked
         }
 
 
 
 -- MODEL
-
-
-type alias Model =
-    { key : Nav.Key
-    , url : Url.Url
-    , lists : List CT.ListInfo
-    , current : Maybe CT.ListUpdated
-    , error : Maybe ( String, Http.Error )
-    }
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -56,8 +44,8 @@ init flags url key =
         _ =
             Debug.log "flags" flags
     in
-    ( Model key url [] Nothing Nothing
-    , Http.get { url = "/list", expect = Http.expectJson ListsLoaded (JD.list CT.decoderListInfo) }
+    ( Model key url [] Nothing Nothing False
+    , Http.get { url = "/list", expect = Http.expectJson Msg.ListsLoaded (JD.list CT.decoderListInfo) }
     )
 
 
@@ -68,7 +56,7 @@ init flags url key =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case Debug.log "message" msg of
-        LinkClicked urlRequest ->
+        Msg.LinkClicked urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
                     Debug.log ("LinkClicked: " ++ Debug.toString url)
@@ -77,13 +65,13 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        UrlChanged url ->
+        Msg.UrlChanged url ->
             Debug.log ("UrlChanged: " ++ Debug.toString url)
                 ( { model | url = url }
                 , Maybe.withDefault Cmd.none (urlToCmd url)
                 )
 
-        ItemChanged rid checked ->
+        Msg.ItemChanged rid checked ->
             let
                 cmd =
                     case model.current of
@@ -94,7 +82,7 @@ update msg model =
                             let
                                 resultMapper : Result Http.Error String -> Msg
                                 resultMapper result =
-                                    result |> Result.map (\_ -> CT.ItemUpdated l.lid rid checked) |> ItemUpdated
+                                    result |> Result.map (\_ -> CT.ItemUpdated l.lid rid checked) |> Msg.ItemUpdated
                             in
                             Http.post
                                 { url = "/list/" ++ CT.toString l.lid ++ "/item/" ++ CT.ridToString rid
@@ -104,36 +92,39 @@ update msg model =
             in
             ( model, cmd )
 
-        ListsLoaded (Ok lists) ->
+        Msg.ListsLoaded (Ok lists) ->
             let
                 cmd =
                     urlToCmd model.url |> Maybe.withDefault Cmd.none
             in
             Debug.log "ListsLoaded: "
-                ( { model | error = Nothing, lists = lists }, cmd )
+                ( { model | error = Nothing, lists = lists, drawerOpened = False }, cmd )
 
-        ListsLoaded (Err err) ->
-            ( { model | error = Just ( "lists", err ) }, Cmd.none )
+        Msg.ListsLoaded (Err err) ->
+            ( { model | error = Just ( "lists", err ), drawerOpened = False }, Cmd.none )
 
-        ListLoaded (Ok list) ->
-            ( { model | error = Nothing, current = Just list }, Cmd.none )
+        Msg.ListLoaded (Ok list) ->
+            ( { model | error = Nothing, current = Just list, drawerOpened = False }, Cmd.none )
 
-        ListLoaded (Err err) ->
-            ( { model | error = Just ( "list", err ) }, Cmd.none )
+        Msg.ListLoaded (Err err) ->
+            ( { model | error = Just ( "list", err ), drawerOpened = False }, Cmd.none )
 
-        ItemUpdated (Ok item) ->
+        Msg.ItemUpdated (Ok item) ->
             ( updateItem model item, Cmd.none )
 
-        ItemUpdated (Err err) ->
+        Msg.ItemUpdated (Err err) ->
             ( { model | error = Just ( "item", err ) }, Cmd.none )
+
+        Msg.OpenDrawer ->
+            ( { model | drawerOpened = True }, Cmd.none )
+
+        Msg.CloseDrawer ->
+            ( { model | drawerOpened = False }, Cmd.none )
 
 
 updateItem : Model -> CT.ItemUpdated -> Model
 updateItem m item =
     let
-        x =
-            2
-
         upd =
             List.map
                 (\r ->
@@ -169,14 +160,14 @@ urlToCmd url =
         [ "view", lid ] ->
             Http.get
                 { url = "/list/" ++ lid
-                , expect = Http.expectJson ListLoaded CT.decoderListUpdated
+                , expect = Http.expectJson Msg.ListLoaded CT.decoderListUpdated
                 }
                 |> Just
 
         [ "edit", lid ] ->
             Http.get
                 { url = "/list/" ++ lid
-                , expect = Http.expectJson ListLoaded CT.decoderListUpdated
+                , expect = Http.expectJson Msg.ListLoaded CT.decoderListUpdated
                 }
                 |> Just
 
@@ -199,24 +190,8 @@ subscriptions _ =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "URL Interceptor"
-    , body =
-        [ LayoutGrid.layoutGrid []
-            [ LayoutGrid.inner []
-                [ LayoutGrid.cell []
-                    [ h2 [] [ text "Lists:" ]
-
-                    --, ul [] (List.map viewListInfo model.lists)
-                    , viewLists (Maybe.map (\l -> l.lid) model.current) model.lists
-                    ]
-                , LayoutGrid.cell []
-                    [ h2 [] [ text "Current list:" ]
-                    , Maybe.withDefault (p [] [ text "<none>" ]) (Maybe.map viewTodoList model.current)
-                    , viewError model.error
-                    ]
-                ]
-            ]
-        ]
+    { title = "TODO Lists"
+    , body = [ page model ]
 
     --        [ text "The current URL is: "
     --        , b [] [ text (Url.toString model.url) ]
@@ -236,110 +211,24 @@ view model =
     }
 
 
+page : Model -> Html Msg
+page model =
+    let
+        paths =
+            Debug.log "paths: "
+                (String.split "/" model.url.path |> List.filter ((/=) ""))
+    in
+    case paths of
+        [ "view", _ ] ->
+            viewPage model
+
+        [ "edit", _ ] ->
+            viewPage model
+
+        _ ->
+            viewLists model
+
+
 viewLink : String -> Html Msg
 viewLink path =
     li [] [ a [ href path ] [ text path ] ]
-
-
-viewLists : Maybe CT.ListId -> List CT.ListInfo -> Html Msg
-viewLists selected ls =
-    case ls of
-        [] ->
-            Html.div [] []
-
-        x :: xs ->
-            MaterialList.list (MaterialList.config |> MaterialList.setDense False |> MaterialList.setRipples False)
-                (viewListInfo selected x)
-                (List.map (viewListInfo selected) xs)
-
-
-viewListInfo : Maybe CT.ListId -> CT.ListInfo -> ListItem.ListItem Msg
-viewListInfo selected info =
-    let
-        s =
-            case selected of
-                Just lid ->
-                    if lid == info.lid then
-                        Just ListItem.selected
-
-                    else
-                        Nothing
-
-                _ ->
-                    Nothing
-    in
-    ListItem.listItem (ListItem.config |> ListItem.setSelected s |> ListItem.setHref ("/view/" ++ CT.toString info.lid |> Just))
-        [ NE.toString info.name |> text ]
-
-
-
---li [] [ a [ CT.toString info.lid |> href ] [ NE.toString info.name |> text ] ]
-
-
-viewTodoList : CT.ListUpdated -> Html Msg
-viewTodoList l =
-    let
-        title =
-            h3 [] [ NE.toString l.name |> text ]
-
-        items =
-            case List.map viewRecord l.items of
-                x :: xs ->
-                    MaterialList.list MaterialList.config x xs
-
-                [] ->
-                    Html.div [] []
-    in
-    p [] [ title, items ]
-
-
-viewRecord : CT.Record -> ListItem.ListItem Msg
-viewRecord r =
-    let
-        state =
-            if r.checked then
-                Checkbox.checked
-
-            else
-                Checkbox.unchecked
-
-        onclick : ListItem.Config Msg -> ListItem.Config Msg
-        onclick =
-            ListItem.setOnClick (ItemChanged r.id (not r.checked))
-    in
-    ListItem.listItem
-        (ListItem.config |> onclick)
-        [ Checkbox.config |> Checkbox.setState (Just state) |> Checkbox.checkbox
-        , NE.toString r.value |> text
-        ]
-
-
-viewError : Maybe ( String, Http.Error ) -> Html Msg
-viewError me =
-    case me of
-        Nothing ->
-            p [] []
-
-        Just ( what, cause ) ->
-            let
-                reason =
-                    case cause of
-                        Http.BadUrl err ->
-                            p [] [ text err ]
-
-                        Http.Timeout ->
-                            p [] [ text "Timeout" ]
-
-                        Http.NetworkError ->
-                            p [] [ text "Network error" ]
-
-                        Http.BadStatus err ->
-                            p [] [ "Status code: " ++ String.fromInt err |> text ]
-
-                        Http.BadBody err ->
-                            p [] [ text err ]
-            in
-            p []
-                [ h3 [] [ "Loading of " ++ what ++ "failed" |> text ]
-                , reason
-                ]
