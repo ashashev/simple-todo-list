@@ -45,23 +45,43 @@ viewPage model =
                                     [ TopAppBar.navigationIcon ]
                             )
                             (IconButton.icon "menu")
-                        , Html.span [ TopAppBar.title ]
-                            [ text (Maybe.withDefault "<none>" (Maybe.map (\l -> NE.toString l.name) model.current)) ]
+                        , viewTopBarTitle model.current
                         ]
+                    , TopAppBar.section [ TopAppBar.alignEnd ] (viewTopBarActions model.current)
                     ]
                 ]
             ]
         , Html.div [ TopAppBar.fixedAdjust ]
-            [ LayoutGrid.layoutGrid []
-                [ LayoutGrid.inner []
-                    [ LayoutGrid.cell []
-                        [ Maybe.withDefault (Html.div [] []) (Maybe.map viewTodoList model.current)
-                        , viewError model.error
-                        ]
-                    ]
-                ]
+            [ Maybe.withDefault (Html.div [] []) (Maybe.map viewTodoList model.current)
+            , viewError model.error
             ]
         ]
+
+
+viewTopBarTitle : Maybe CT.ListUpdated -> Html Msg
+viewTopBarTitle maybeList =
+    case maybeList of
+        Nothing ->
+            Html.span [ TopAppBar.title ] [ text "<none>" ]
+
+        Just l ->
+            Html.span [ TopAppBar.title ] [ text (NE.toString l.name) ]
+
+
+viewTopBarActions : Maybe CT.ListUpdated -> List (Html Msg)
+viewTopBarActions maybeList =
+    case maybeList of
+        Nothing ->
+            []
+
+        Just l ->
+            [ IconButton.iconButton
+                (IconButton.config
+                    |> IconButton.setAttributes [ TopAppBar.actionItem ]
+                    |> IconButton.setHref ("/edit/" ++ CT.toString l.lid |> Just)
+                )
+                (IconButton.icon "edit")
+            ]
 
 
 viewTodoList : CT.ListUpdated -> Html Msg
@@ -72,7 +92,6 @@ viewTodoList l =
                 x :: xs ->
                     MaterialList.list
                         (MaterialList.config
-                            |> MaterialList.setDense True
                             |> MaterialList.setRipples False
                         )
                         x
@@ -100,7 +119,9 @@ viewRecord r =
     in
     ListItem.listItem
         (ListItem.config |> onClick)
-        [ Checkbox.config |> Checkbox.setState (Just state) |> Checkbox.checkbox
+        [ Checkbox.config
+            |> Checkbox.setState (Just state)
+            |> Checkbox.checkbox
         , NE.toString r.value |> text
         ]
 
@@ -131,6 +152,6 @@ viewError me =
                             Html.p [] [ text err ]
             in
             Html.p []
-                [ Html.h3 [] [ "Loading of " ++ what ++ "failed" |> text ]
+                [ Html.h3 [] [ "Loading of " ++ what ++ " failed" |> text ]
                 , reason
                 ]

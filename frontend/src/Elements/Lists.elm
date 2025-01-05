@@ -17,7 +17,6 @@ elemLists selected ls =
         x :: xs ->
             MaterialList.list
                 (MaterialList.config
-                    |> MaterialList.setDense True
                     |> MaterialList.setRipples False
                 )
                 (elemListInfo selected x)

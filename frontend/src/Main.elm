@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Browser.Navigation as Nav
-import Common.Model exposing (Model)
+import Common.Model as Model exposing (Model)
 import Common.Msg as Msg exposing (Msg)
 import Common.Types as CT
 import Debug
@@ -12,6 +12,7 @@ import Html.Attributes exposing (..)
 import Http
 import Json.Decode as JD
 import Json.Encode as JE
+import Pages.Edit exposing (editPage, editUpdate)
 import Pages.Main exposing (viewLists)
 import Pages.View exposing (viewPage)
 import Platform.Cmd as Cmd
@@ -22,7 +23,7 @@ import Url
 -- MAIN
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
@@ -38,13 +39,17 @@ main =
 -- MODEL
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+type alias Flags =
+    { seed : Int }
+
+
+init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
         _ =
             Debug.log "flags" flags
     in
-    ( Model key url [] Nothing Nothing False
+    ( Model.init key flags.seed url
     , Http.get { url = "/list", expect = Http.expectJson Msg.ListsLoaded (JD.list CT.decoderListInfo) }
     )
 
@@ -104,10 +109,10 @@ update msg model =
             ( { model | error = Just ( "lists", err ), drawerOpened = False }, Cmd.none )
 
         Msg.ListLoaded (Ok list) ->
-            ( { model | error = Nothing, current = Just list, drawerOpened = False }, Cmd.none )
+            ( { model | error = Nothing, current = Just list, drawerOpened = False, undo = [], redo = [] }, Cmd.none )
 
         Msg.ListLoaded (Err err) ->
-            ( { model | error = Just ( "list", err ), drawerOpened = False }, Cmd.none )
+            ( { model | error = Just ( "list", err ), drawerOpened = False, undo = [], redo = [] }, Cmd.none )
 
         Msg.ItemUpdated (Ok item) ->
             ( updateItem model item, Cmd.none )
@@ -120,6 +125,9 @@ update msg model =
 
         Msg.CloseDrawer ->
             ( { model | drawerOpened = False }, Cmd.none )
+
+        Msg.Edit m ->
+            editUpdate m model
 
 
 updateItem : Model -> CT.ItemUpdated -> Model
@@ -223,7 +231,7 @@ page model =
             viewPage model
 
         [ "edit", _ ] ->
-            viewPage model
+            editPage model
 
         _ ->
             viewLists model

@@ -1,6 +1,7 @@
 module Common.Msg exposing (..)
 
 import Browser
+import Common.EditMsg exposing (EditMsg)
 import Common.Types as CT
 import Http
 import Url
@@ -15,3 +16,4 @@ type Msg
     | ItemUpdated (Result Http.Error CT.ItemUpdated)
     | OpenDrawer
     | CloseDrawer
+    | Edit EditMsg
