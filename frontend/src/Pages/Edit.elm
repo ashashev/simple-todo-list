@@ -199,7 +199,7 @@ editUpdate msg model =
                     ( { model
                         | error = Nothing
                       }
-                    , Nav.pushUrl model.key ("/view/" ++ CT.toString l.lid)
+                    , Nav.load ("/view/" ++ CT.toString l.lid)
                     )
 
 
@@ -244,18 +244,6 @@ renameRecord rid value l =
                 l.items
     in
     { l | items = xs }
-
-
-renameList : CT.ListId -> NE.NonemptyString -> List CT.ListInfo -> List CT.ListInfo
-renameList lid name =
-    List.map
-        (\l ->
-            if l.lid /= lid then
-                l
-
-            else
-                { l | name = name }
-        )
 
 
 editTopBarTitle : Maybe CT.ListUpdated -> Html Msg
@@ -361,11 +349,14 @@ editRecord r =
         onClick : ListItem.Config Msg -> ListItem.Config Msg
         onClick =
             ListItem.setOnClick (Msg.ItemChanged r.id (not r.checked))
+
+        msg =
+            EditMsg.ChangeItem r.id (not r.checked)
     in
     ListItem.listItem
         --(ListItem.config |> onClick)
         ListItem.config
-        [ Checkbox.config |> Checkbox.setState (Just state) |> Checkbox.checkbox
+        [ Checkbox.config |> Checkbox.setState (Just state) |> Checkbox.setOnChange msg |> Checkbox.checkbox
         , TextField.filled
             (TextField.config
                 |> TextField.setValue (Just <| NE.toString r.value)

@@ -10,7 +10,11 @@ import String.Nonempty as NE
 
 elemLists : Maybe CT.ListId -> List CT.ListInfo -> Html Msg
 elemLists selected ls =
-    case ls of
+    let
+        ys =
+            List.sortBy (\l -> NE.toString l.name) ls
+    in
+    case ys of
         [] ->
             Html.div [] []
 
