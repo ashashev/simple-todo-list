@@ -1,6 +1,9 @@
 package tdl.db.jdbc
 
+import java.nio.file.Path
+
 import cats.effect.MonadCancelThrow
+import cats.effect.kernel.Async
 import cats.implicits.given
 import doobie.Transactor
 import doobie.implicits.given
@@ -9,8 +12,6 @@ import tdl.model
 import tdl.model.ListId
 import tdl.model.RecordId
 import tdl.util.NonEmptyString
-import java.nio.file.Path
-import cats.effect.kernel.Async
 
 class TodoStore[F[_]: MonadCancelThrow](tr: Transactor[F])
     extends tdl.model.TodoStore[F]:
@@ -27,7 +28,7 @@ class TodoStore[F[_]: MonadCancelThrow](tr: Transactor[F])
       .to[List]
       .map {
         case Nil => None
-        case xs =>
+        case xs  =>
           val sorted = xs.sortBy(_._2.order)
           val name = sorted.head._1
           val rs = sorted.map {

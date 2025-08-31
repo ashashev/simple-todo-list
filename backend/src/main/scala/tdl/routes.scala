@@ -12,6 +12,7 @@ import org.http4s.ServerSentEvent
 import org.http4s.StaticFile
 import org.http4s.circe.*
 import org.http4s.dsl.io.*
+import org.typelevel.log4cats.LoggerFactory
 
 import tdl.api.*
 import tdl.api.PathExtractors.*
@@ -49,21 +50,22 @@ def routes(store: Store[IO]) = HttpRoutes
       )
   }
 
-def staticRoutes(path: nf.Path) = HttpRoutes.of[IO] {
-  case req @ GET -> Root if path.resolve("index.html").toFile().isFile() =>
-    StaticFile
-      .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
-      .getOrElseF(NotFound())
-  case req @ GET -> Root / p if path.resolve(p).toFile().isFile() =>
-    StaticFile
-      .fromPath(Path.fromNioPath(path.resolve(p)), Some(req))
-      .getOrElseF(NotFound())
-  case req @ GET -> Root / "view" / _ =>
-    StaticFile
-      .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
-      .getOrElseF(NotFound())
-  case req @ GET -> Root / "edit" / _ =>
-    StaticFile
-      .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
-      .getOrElseF(NotFound())
-}
+def staticRoutes(path: nf.Path)(using lf: LoggerFactory[IO]) =
+  HttpRoutes.of[IO] {
+    case req @ GET -> Root if path.resolve("index.html").toFile().isFile() =>
+      StaticFile
+        .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
+        .getOrElseF(NotFound())
+    case req @ GET -> Root / p if path.resolve(p).toFile().isFile() =>
+      StaticFile
+        .fromPath(Path.fromNioPath(path.resolve(p)), Some(req))
+        .getOrElseF(NotFound())
+    case req @ GET -> Root / "view" / _ =>
+      StaticFile
+        .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
+        .getOrElseF(NotFound())
+    case req @ GET -> Root / "edit" / _ =>
+      StaticFile
+        .fromPath(Path.fromNioPath(path.resolve("index.html")), Some(req))
+        .getOrElseF(NotFound())
+  }

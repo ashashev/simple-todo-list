@@ -1,7 +1,5 @@
 package tdl
 
-import util.*
-
 package object util:
 
   object NonEmptyString

@@ -1,15 +1,14 @@
-val scala3Version = "3.3.0"
+val scala3Version = "3.3.6"
 
-val Http4sVersion = "1.0.0-M39"
-val MunitVersion = "0.7.29"
-//val MunitVersion = "1.0.0-M8"
-val LogbackVersion = "1.4.11"
-val MunitCatsEffectVersion = "1.0.7"
-val Fs2Version = "3.9.0"
-val CirceVersion = "0.14.6"
-val DoobieVersion = "1.0.0-RC4"
+val Http4sVersion = "1.0.0-M44"
+val Fs2Version = "3.12.0"
+val CirceVersion = "0.14.14"
+val DoobieVersion = "1.0.0-RC10"
 val SqliteJdbcVersion = "3.43.0.0"
-val Log4CatsSlf4jVersion = "2.6.0"
+val LogbackVersion = "1.5.18"
+val Log4CatsSlf4jVersion = "2.7.1"
+val MunitVersion = "1.1.1"
+val MunitCatsEffectVersion = "1.0.7"
 
 lazy val root = project
   .in(file("."))
@@ -25,6 +24,7 @@ lazy val root = project
       "org.scalameta" %% "munit" % MunitVersion % Test,
       "org.typelevel" %% "munit-cats-effect-3" % MunitCatsEffectVersion % Test,
       "ch.qos.logback" % "logback-classic" % LogbackVersion,
+      "org.typelevel" %% "log4cats-core" % Log4CatsSlf4jVersion,
       "org.typelevel" %% "log4cats-slf4j" % Log4CatsSlf4jVersion,
       "co.fs2" %% "fs2-core" % Fs2Version,
       "co.fs2" %% "fs2-io" % Fs2Version,
@@ -62,6 +62,10 @@ lazy val root = project
       "-Wunused:params", // Enable -Wunused:explicits,implicits.
       "-Wunused:linted",
       "-Wvalue-discard", // Warn when non-Unit expression results are unused.
+      "-release",
+      "21",
+      "-Xtarget",
+      "21",
     ),
     fork := true,
   )

@@ -10,7 +10,7 @@ object Ops:
     def value(using loc: munit.Location): M[A] =
       io.flatMap {
         case Outcome.Succeeded(fa) => fa
-        case x =>
+        case x                     =>
           MonadThrow[M].catchNonFatal(
             Assertions.fail(s"expect Succeeded but got: $x"),
           )
